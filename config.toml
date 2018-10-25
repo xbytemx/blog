@@ -20,8 +20,8 @@ paginate = 10
 
 	name = "Tony Palma"
 	bio = "Yo solo toque la computadora y solita se apago"
-	description = "La idea de este blog es documentar un poco mas sobre lo que aprendo"
-	
+	description = "Un blog donde escribo sobre pentesting, reversing, networking y CTFs"
+
 	location = ""
 	twitter = "xbytemx"
 	linkedin = ""
@@ -36,4 +36,3 @@ paginate = 10
 	backtotopStr = "Back to top"
 	shareStr = "Share"
 	pageNotFoundTitle = "404 - Page not found"
-
