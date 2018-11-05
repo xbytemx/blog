@@ -7,25 +7,35 @@ categories: ["reversing","ctf"]
 description: "Ahora el turno del challenge 3 del FLARE-ON 2014, este se trata de un PE32 que descarga una shellcode maliciosa, veamos que tenemos por aqui"
 ---
 
-Bien comenzamos por descargar este reto, "C3.zip" (recordar que se los retos se encuentran [aquí][c2c76e1c]). En este challenge lo descomprimos con la contraseña "malware", por lo que iniciamos descomprimiendo el archivo en nuestra carpeta challenge03:
+Bien comenzamos por descomprimir el challenge "C3.zip", el cual esta protegido por la contraseña "malware".
+
+> Nota: Todos los archivos de challenge se encuentran dentro de un zip que se descarga [aquí][c2c76e1c]
 
 ![Unzip](/img/flareon2014-c3/unzip.png)
 
-Identificamos el ejecutable con DetectItEasy:
+Como podemos ver, el challenge nos entrega unicamente el archivo "such_evil", del cual no tenemos mucha información de momento. Tradicionalmente ejecutaria file o hasta un binwalk, pero para este caso nos iremos directo a analizar el archivo con DetectItEasy:
 
 ![Detect It Easy](/img/flareon2014-c3/die.png)
 
-Como podemos observar, se trata de un ejecutable tipo PE32, que no se encuentra empaquetado y podemos ver que tambien importa la dll "msvcrt.dll", veamos mas de esto en CFF Explorer:
+Como podemos observar, se trata de un ejecutable con formato PE32, que no se encuentra empaquetado y podemos ver que tambien importa la dll "msvcrt.dll". Veamos más detalle sobre el archivo con CFF Explorer:
 
 ![CFF Explorer](/img/flareon2014-c3/cffexplorer-import.png)
 
-El DLL msvcrt.dll, es La biblioteca estandar de C para Visual C++, la cual nos permite manipular strings, posiciones de memoria, llamadas a la entrada y salida estilo C, entre otras cosas.
+El archivo DLL "msvcrt.dll", es la biblioteca estandar de C para Visual C++, la cual nos permite manipular strings, posiciones de memoria, llamadas a la entrada y salida estilo C, entre otras cosas.
 
-Bien, continuamos cargando el archivo en radare2 para comenzar a analizarlo estaticamente:
+Ejecutemos el programa en wine para ver su comportamiento:
+
+![BrokenByte](/img/flareon2014-c3/first-run.png)
+
+Como podemos ver, el programa finaliza con un mensaje de BrokenByte y un tipo de error fatal (FatalAppExitA).
+
+Bien, continuamos cargando el archivo en radare2 para comenzar a analizarlo estáticamente:
 
 ![Radare2 - Functions, Imports](/img/flareon2014-c3/r2-functions.png)
 
-Observamos las funciones importadas y 4 funciones:
+> El warning que recibimos es porque la funcion fcn.00401000 es muy grande y si ejecutaramos un pdf no la imprimiria completa. Para solucionarlo debemos configurar en el enterno la variable a 2500
+
+Observamos las funciones importadas por la DLL msvcrt.dll y 4 funciones incluidas en las instrucciones:
 
     0x00401000    1 1022         fcn.00401000
     0x0040258c    1 4            fcn.0040258c
@@ -67,7 +77,65 @@ Veamos que hace esta funcion:
 0x0040260a      c3             ret
 ```
 
-Ok, despues en ENTRY0 vemos que los calls que hacemos a las funciones de "msvcrt.dll", llamamos a nuestra mega funcion, fcn.00401000:
+Ok, despues en ENTRY0 vemos que se realizan diferentes calls  a las funciones de "msvcrt.dll", resumamos lo que sucede en ENTRY0:
+
+    fcn.004025d1(int \*local_18h)
+    controlfp(0x10000, 0x30000)
+    set_app_type(1)
+    getmainargs(int \*local_1ch, int \*local_20h, int \*local_24h, 0, int \*local_2ch)
+    fcn.00401000(int local_1ch, int local_20h, int local_24h)
+    exit(int local_28h)
+
+Revisemos estas funciones importadas de "msvcrt.dll" para darle sentido a lo que ocurre en ENTRY0:
+
+[controlfp](https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/control87-controlfp-control87-2?view=vs-2017) es una funcion que nos permite controlar la precisión de las operaciones punto flotantes, sus argumentos son new y mask con los cuales se redefine la presición para el programa durante la ejecución:
+
+    unsigned int _controlfp(
+       unsigned int new,
+       unsigned int mask
+    );
+
+En este caso, estariamos colocando la presición a 53 bits para las tareas punto flotante (revisar las referencias en la documentacion):
+
+    _controlfp(_PC_53, _MCW_PC)
+
+La siguiente funcion es [set_app_type](https://msdn.microsoft.com/en-us/library/ff770596.aspx) el cual como su nombre lo indica, nos sirve para indicarle tambien al sistema operativo cual es el tipo de aplicacion que esta ejecutando:
+
+    void __set_app_type (
+        int at
+    )
+
+Como vimos anteriormente, el parametro para esta funcion fue 1, lo cual nos lleva a investigar cual de los 3 valores corresponde a 1. Para ello, tuve que hacer referencia a los headers de la [biblioteca](http://www.jbox.dk/sanos/source/win32/msvcrt/msvcrt.h.html) el cual me indico que 1 es _CONSOLE_APP
+
+    __set_app_type(_CONSOLE_APP)
+
+La siguiente funcion es [getmainargs](https://msdn.microsoft.com/en-us/library/ff770599.aspx), la cual recibe 5 argumentos:
+
+    int __getmainargs(
+       int * _Argc,
+       char *** _Argv,
+       char *** _Env,
+       int _DoWildCard,
+       _startupinfo * _StartInfo);
+
+Por lo que a continuación sabemos que:
+
+Variable local | Nombre de argumento | Descripción | Valor
+--- | --- | --- | ---
+local_1ch | _Argc | Apuntador | Desconocido
+local_20h | _Argv | Apuntador | Desconocido
+local_24h | _Env  | Apuntador | Desconocido
+n/a  | _DoWildCard | Entero | 0
+local_2ch | _startupinfo | Apuntador | Desconocido
+
+Como nos indica la documentacion al respecto de esta funcion, esta se encarga de preparar los argumentos que recibiria main, parseandolos y copiandolos sobre los apuntadores.
+
+La siguiente funcion es fcn.00401000, la cual recibe 3 parametros que como ya vimos tienen los siguientes nombres:
+
+    fcn.00401000(int _Argc, int _Argv, int _Env)
+
+Esto claramente nos indica que esta es la funcion main() del programa, pero de momento la manejaremos como una funcion independiente. Comencemos a analizarla:
+> Nota: Se ve otro nombre porque mas adelante será renombrada como StackLoader
 
 ![Funcion loader, inicio](/img/flareon2014-c3/loader1.png)
 
@@ -155,7 +223,7 @@ with open("payload2.bin", "wb") as fout:
 r.quit()
 ```
 
-Tras ejecutar el codigo, analizamos el resultado en radare2:
+Tras ejecutar el codigo, analizamos el binario resultante en radare2:
 
 ![Post Loop2, XOR](/img/flareon2014-c3/postxor1.png)
 
@@ -382,4 +450,4 @@ Espero que les haya gustado.
 Saludos,
 
 
-[c2c76e1c]: http://www.flare-on.com/ "Flare-On 2014"
+[c2c76e1c]: http://www.flare-on.com/files/2014_FLAREOn_Challenges.zip "Flare-On 2014"
