@@ -4,14 +4,14 @@ date: 2018-10-21T20:25:36-05:00
 draft: false
 tags: ["flareon","revisitado","flareon2014","dotnet","reversing","writeup"]
 categories: ["reversing","ctf"]
-description: "Otro writeup mas de como resolver el reto 01 del primer Flare-On_2014 de Fireeye, llamado Bob Doge.
-
-Bien, comenzamos por descargar el reto, el cual posteriormente lo pasamos por file y nos indica vía headers que se trata de un 'PE32+ ejecutable con GUI x86_64', por lo que probamos a ejecutarlo en un sandbox"
 ---
 
-Bien, comenzamos por descargar y verificar el reto, el cual posteriormente lo pasamos por file y nos indica vía headers que se trata de un 'PE32+ ejecutable con GUI x86_64', por lo que probamos a ejecutarlo en un sandbox, ahí veremos que se trata de Microsoft Cabinet, que nos hace aceptar un EULA de Fireeye, por lo que extraemos su contenido usando cabextract:
 
-```
+Comenzamos por descargar el [zip](http://www.flare-on.com/files/2014_FLAREOn_Challenges.zip) que contiene todos los challenges, para posteriormente ir a cada challenge y resolverlos.
+
+Bien, despues de descargar el archivo general y descomprimirlo, debemos tener en nuestra carpeta un archivo llamnado C1.exe, el cual posteriormente lo pasamos por file y nos indica vía headers que se trata de un 'PE32+ ejecutable con GUI x86_64', por lo que probamos a ejecutarlo en un sandbox, ahí veremos que se trata de Microsoft Cabinet, que nos hace aceptar un EULA de Fireeye, por lo que extraemos su contenido usando cabextract:
+
+```bash
 xbytemx@laptop:~/flare-on2014$ cabextract C1.exe
 Extracting cabinet: C1.exe
   extracting Challenge1.exe
@@ -186,7 +186,7 @@ Aquí ya tenemos algo mas de detalle sobre las características de la aplicació
 
 El titulo tiene el mensaje "Let's start with something easy!" y en el contenido de la imagen tenemos una referencia a "global::XXXXXXXXXXXXXXX.Properties.Resources.bob_ross", que por la parte final debe ser alguna imagen de bob_ross.
 
-Finalmente, revisamos el contenido del ultimo archivo de código fuente, Form1:  
+Finalmente, revisamos el contenido del ultimo archivo de código fuente, Form1:
 
 ```
 using System;
@@ -284,7 +284,7 @@ U
 
 Como podemos observar, el primer resultado corresponde a una dirección de correo, la cual es la flag de este reto.
 
-### **flag: 3rmahg3rd.b0b.d0ge@flare-on.com**
+**flag: 3rmahg3rd.b0b.d0ge@flare-on.com**
 
 ---
 

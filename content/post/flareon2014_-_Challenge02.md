@@ -21,7 +21,7 @@ Al ver el contenido tenemos 2 archivos, una imagen y un archivo html:
 
 ![file](/img/flareon-2014-challenge-02/file-of-content.png)
 
-Si analizamos el documento html tenemos lo siguiente:
+Si analizamos el documento html, nos daremos cuenta que la pagina corresponde a la original del primer flare-on, por lo que el codigo en si, es igual que la pagina que estaba ejecutandose en dicho momento:
 
 ```html
 <!DOCTYPE html>
@@ -291,7 +291,7 @@ Esto resuelve los encoding y nos devuelve los siguientes strings:
 
 Si sustituimos DOT, AT y DASH en "a11DOTthatDOTjava5crapATflareDASHonDOTcom" tenemos "a11.that.java5crap@flare-on.com", la cual conforma la flag del reto.
 
-### **flag: a11.that.java5crap@flare-on.com**
+**flag: a11.that.java5crap@flare-on.com**
 
 ---
 

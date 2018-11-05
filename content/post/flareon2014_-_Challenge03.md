@@ -441,7 +441,7 @@ Finalmente, como pudimos ver en la ventana anterior, la bandera ya se asoma, sol
 ![Final](/img/flareon2014-c3/final.png)
 
 
-### **flag: such.5h311010101@flare-on.com**
+**flag: such.5h311010101@flare-on.com**
 
 ---
 

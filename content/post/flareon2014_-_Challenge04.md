@@ -267,7 +267,7 @@ Tras ejecutarlo con wine tenemos el mensaje que ya nos iba indicando scdbg:
 
 Y listo, hemos podido encontrar la flag dentro de la variable del texto del mensaje.
 
-### **flag: wa1ch.d3m.spl01ts@flare-on.com**
+**flag: wa1ch.d3m.spl01ts@flare-on.com**
 
 ---
 
