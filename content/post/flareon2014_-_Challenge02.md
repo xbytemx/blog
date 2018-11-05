@@ -2,10 +2,6 @@
 title: "Flare-on 2014 - Challenge 02: Javascrap"
 date: 2018-10-24T15:16:00-05:00
 draft: false
-author: "Tony Palma"
-next: /flareon2014_-_challenge03/
-prev: /flareon2014_-_challenge01/
-weight: 10
 tags: ["flareon","revisitado","flareon2014","javascript","reversing","writeup"]
 categories: ["reversing","ctf"]
 description: "Otro writeup mas de como resolver el reto 02 del primer Flare-On_2014 de Fireeye, llamado Javascrap.
@@ -13,7 +9,9 @@ description: "Otro writeup mas de como resolver el reto 02 del primer Flare-On_2
 Bien comenzamos por descargar este reto, \"C2.zip\" y validarlo. En este challenge y los siguientes todos serán archivos zip con la contraseña \"malware\""
 ---
 
-Bien comenzamos por descargar este reto, "C2.zip" y validarlo. En este challenge y los siguientes todos serán archivos zip con la contraseña "malware", por lo que iniciamos descomprimiendo el archivo en nuestra carpeta challenge02:
+Bien comenzamos por descomprimir el challenge "C2.zip", el cual esta protegido por la contraseña "malware".
+
+> Nota: Todos los archivos de challenge se encuentran dentro de un zip que se descarga [aquí](http://www.flare-on.com/files/2014_FLAREOn_Challenges.zip)
 
 ![unzip](/img/flareon-2014-challenge-02/unzip.png)
 
