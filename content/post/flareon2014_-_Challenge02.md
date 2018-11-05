@@ -1,6 +1,6 @@
 ---
 title: "Flare-on 2014 - Challenge 02: Javascrap"
-date: "2018-10-24T15:16:00-05:00"
+date: 2018-10-24T15:16:00-05:00
 draft: false
 author: "Tony Palma"
 next: /flareon2014_-_challenge03/
