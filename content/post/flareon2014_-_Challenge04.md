@@ -1,7 +1,7 @@
 ---
 title: "Flare-on 2014 - Challenge 04: Sploitastic"
 date: 2018-10-26T22:50:21-06:00
-draft: true
+draft: false
 tags: ["flareon","revisitado","flareon2014","radare2","reversing","writeup","javascript","pdf"]
 categories: ["reversing","ctf"]
 description: "Contiuamos esta serie de retos con el challenge 4 del FLARE-ON 2014, este se trata de un PDF que ejecuta un codigo malicioso via Javascript el cual despliega un popup con el titulo \"Owned!!!\""
