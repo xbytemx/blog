@@ -4,10 +4,12 @@ date: 2018-10-24T15:16:00-05:00
 draft: false
 tags: ["flareon","revisitado","flareon2014","javascript","reversing","writeup"]
 categories: ["reversing","ctf"]
-description: "Otro writeup mas de como resolver el reto 02 del primer Flare-On_2014 de Fireeye, llamado Javascrap.
-
-Bien comenzamos por descargar este reto, \"C2.zip\" y validarlo. En este challenge y los siguientes todos serán archivos zip con la contraseña \"malware\""
 ---
+
+Otro writeup mas de como resolver el reto 02 del primer Flare-On_2014 de Fireeye, llamado Javascrap.
+
+Bien comenzamos por descargar este reto, "C2.zip" y validarlo. En este challenge y los siguientes todos serán archivos zip con la contraseña "malware"
+<!--more-->
 
 Bien comenzamos por descomprimir el challenge "C2.zip", el cual esta protegido por la contraseña "malware".
 
@@ -19,7 +21,7 @@ Al ver el contenido tenemos 2 archivos, una imagen y un archivo html:
 
 ![file](/img/flareon-2014-challenge-02/file-of-content.png)
 
-Si analizamos el documento html, nos daremos cuenta que la pagina corresponde a la original del primer flare-on, por lo que el codigo en si, es igual que la pagina que estaba ejecutandose en dicho momento:
+Si analizamos el documento html, nos daremos cuenta que la pagina corresponde a la original del primer flare-on, por lo que el código en si, es igual que la pagina que estaba ejecutándose en dicho momento:
 
 ```html
 <!DOCTYPE html>

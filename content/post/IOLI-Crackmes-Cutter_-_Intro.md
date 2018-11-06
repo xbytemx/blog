@@ -4,13 +4,12 @@ date: 2018-10-18T13:32:59-05:00
 draft: false
 tags: ["crackme","ioli","cutter","radare","reversing"]
 categories: ["reversing","ELF32"]
-description: "Ok, esta es una pequeña guía de como resolver los retos crackme de IOLI con cutter. La verdad me he divertido mucho usando este gui de radare2 y creo que merece la pena que veamos más como explotar la herramienta.
-
-Lo primero es conseguir la herramienta y los crackmes"
 ---
 
-Ok, esta es una pequeña guía de como resolver los retos crackme de IOLI con cutter. La verdad me he divertido mucho usando este gui de radare2 y creo que merece la pena que veamos más como explotar la herramienta.
+Ok, esta es una pequeña guía de como resolver los retos crackme de IOLI con cutter. La verdad me he divertido mucho usando este GUI de radare2 y creo que merece la pena que veamos más como explotar la herramienta.
 
+Lo primero es conseguir la herramienta y los crackmes
+<!--more-->
 
 Lo primero es conseguir la herramienta y los crackmes, esto es bastante sencillo, solo accedemos a las siguientes urls:
 

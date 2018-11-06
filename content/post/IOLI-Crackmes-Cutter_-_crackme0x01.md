@@ -4,10 +4,10 @@ date: 2018-10-23T18:42:38-05:00
 draft: false
 tags: ["crackme","ioli","cutter","radare","reversing"]
 categories: ["reversing","ELF32"]
-description: "En el crackme anterior, exploramos un poco mas sobre las propiedades de Cutter para analizar el código, pero como tal tomamos los apuntes basados en las instrucciones que observamos directamente del desensamblador. En esta entrada aprenderemos un poco mas sobre como usar el desensamblador y el grafo de brincos condicionales."
 ---
 
 En el crackme anterior, exploramos un poco mas sobre las propiedades de Cutter para analizar el código, pero como tal tomamos los apuntes basados en las instrucciones que observamos directamente del desensamblador. En esta entrada aprenderemos un poco mas sobre como usar el desensamblador y el grafo de brincos condicionales.
+<!--more-->
 
 ## Footprint
 Antes de llegar de lleno con el desensamblado del binario, analicemos si el siguiente crackme se parece al anterior. Comenzamos por un file:

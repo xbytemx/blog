@@ -4,9 +4,10 @@ date: 2018-10-27T22:54:21-06:00
 draft: false
 tags: ["crackme","ioli","cutter","radare","reversing"]
 categories: ["reversing","ELF32"]
-description: "Nuevamente a usar Cutter para resolver crackmes! En esta ocasión continuamos con la serie de crackmes de IOLI, ahora resolviendo el 3er crackme"
-
 ---
+
+Nuevamente a usar Cutter para resolver crackmes! En esta ocasión continuamos con la serie de crackmes de IOLI, ahora resolviendo el 3er crackme
+<!--more-->
 
 ## Footprint
 

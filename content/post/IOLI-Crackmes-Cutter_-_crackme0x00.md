@@ -3,14 +3,15 @@ title: "Reversing de IOLI Crackmes con Cutter - Crackme0x00"
 date: 2018-10-20T00:07:58-05:00
 tags: ["crackme","ioli","cutter","radare","reversing"]
 categories: ["reversing","ELF32"]
-description: "En la entrada anterior, descargamos y revisamos muy por encima lo que Cutter nos presentaba con sus paneles y ventanas. Hoy daremos inicio al análisis del primer crackme de IOLI"
 draft: false
 ---
 
+En la entrada anterior, descargamos y revisamos muy por encima lo que Cutter nos presentaba con sus paneles y ventanas. Hoy daremos inicio al análisis del primer crackme de IOLI
+<!--more-->
 
 En la entrada anterior, descargamos y revisamos muy por encima lo que Cutter nos presentaba con sus paneles y ventanas. Hoy daremos inicio al análisis del primer crackme de IOLI. Para la gente acostumbrada al Reversing, esto sera cosa de todos los días. Pero si eres nuevo, te invito a analizar a detalle lo que a continuación se presenta.
 
-> Si estas completamente iniciando, te invito a leer el material (tutoriales, writeups, videos) que se ha escrito en la comunidad de CrackLatinos (CLS), es impresionante. En estos tutoriales omito algunas cosas mas asociadas a entender el detalle de las intrucciones y la estructura de los binarios.
+> Si estas completamente iniciando, te invito a leer el material (tutoriales, writeups, videos) que se ha escrito en la comunidad de CrackLatinos (CLS), es impresionante. En estos tutoriales omito algunas cosas mas asociadas a entender el detalle de las instrucciones y la estructura de los binarios.
 
 Comenzamos por iniciar Cutter y presionar "Select", navegamos hasta la carpeta del crackme0x00 y lo seleccionamos. En mi caso queda de la siguiente manera:
 
@@ -88,7 +89,7 @@ Continuemos con la siguiente parte, el Disassembly.
 
 ## Desensamblador
 
-Ok, la pestaña donde mas pasaremos tiempo analizando las instrucciones del binario, la del desensamblado del binario. Como podemos ver gracias al panel de funciones, ya nos encontramos en la función main y podemos analizar todo el código desemsamblado de esta función:
+Ok, la pestaña donde mas pasaremos tiempo analizando las instrucciones del binario, la del desensamblado del binario. Como podemos ver gracias al panel de funciones, ya nos encontramos en la función main y podemos analizar todo el código desensamblado de esta función:
 
 ![dis-main](/img/cutter01/dis-main.png)
 
@@ -167,7 +168,7 @@ Ahora lo que vemos a continuación, es una comparación entre s1 y s2, teniendo 
 
 En el ultimo bloque que analizaremos, tenemos que en el acomulador EAX se registra el resultado de la comparación, la cual si es 0, levanta el flag de ZF, caso contrario el flag ZF se mantiene en 0. Al llegar a "JE 0x8048480", si ZF es 0, brincamos a 0x08048480, en donde imprimiremos el mensaje "Password OK :)", caso contrario que ZF sea diferente a 0, imprimiremos el mensaje "Invalid Password"
 
-Aunque hasta este punto, ya debe ser evidente la solución a este crackme, no olvidemos revisar la grafica de la funcion main.
+Aunque hasta este punto, ya debe ser evidente la solución a este crackme, no olvidemos revisar la grafica de la función main.
 
 ## Grafico
 
