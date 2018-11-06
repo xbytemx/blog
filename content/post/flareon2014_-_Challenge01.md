@@ -4,8 +4,8 @@ date: 2018-10-21T20:25:36-05:00
 draft: false
 tags: ["flareon","revisitado","flareon2014","dotnet","reversing","writeup"]
 categories: ["reversing","ctf"]
+description: "Iniciamos otra serie de writeups acerca de reversing, en este caso siguiendo todas las soluciones hasta el momento de todos los eventos de flare-on (ambicioso proyecto jeje), bueno iniciemos por el primer challenge del 2014, llamado simplemente Bob Doge."
 ---
-
 
 Comenzamos por descargar el [zip](http://www.flare-on.com/files/2014_FLAREOn_Challenges.zip) que contiene todos los challenges, para posteriormente ir a cada challenge y resolverlos.
 
