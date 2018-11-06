@@ -1,6 +1,6 @@
 baseURL = "https://xbytemx.github.io/"
-languageCode = "en-us"
-defaultContentLanguage = "es-mx"
+languageCode = "en"
+defaultContentLanguage = "es"
 title = "xbytemx blog"
 enableRobotsTXT = true
 enableEmoji = true
@@ -66,7 +66,7 @@ preserveTaxonomyNames = true
   dateFormatToUse = "2006-01-02"
 
   # show word count and read time ?                       # 是否显示字数统计与阅读时间
-  moreMeta = false
+  moreMeta = true
 
   # 一些全局开关，你也可以在每一篇内容的 front matter 中针对单篇内容关闭或开启某些功能，在 archetypes/default.md 查看更多信息。
   # Some global options, you can also close or open something in front matter for a single post, see more information from `archetypes/default.md`.
