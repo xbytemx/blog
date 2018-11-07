@@ -260,6 +260,10 @@ En mi caso use el scdbg+unicorn para interpretar directamente las instrucciones 
 
 Esta salida también nos indica las llamadas que realiza el shellcode, ya una vez que todo fue correctamente entregado.
 
+Veamos ahora si detenemos el emulador justo cuando subiamos el valor a ECX antes del XOR de cifrado:
+
+![Shellcode Emulation and memory dump](/img/flareon2014-c4/scdbg2.png)
+
 Otra manera también es construir un exe con el payload, en mi caso use la pagina de [sandsprite](http://sandsprite.com/shellcode_2_exe.php) para generarlo:
 
 ![Shellcode to EXE](/img/flareon2014-c4/shellcode2exe.png)
