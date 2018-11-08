@@ -330,17 +330,79 @@ Las siguientes instrucciones hacen lo siguiente; comparo si ESP-0x7c (actualment
 
 Esto es una clara referencia a un tipo de loop que sera mas claro cuando encontremos el jmp de retorno a este punto de comparación y salida.
 
-![i](/img/cutter04/dis25.png)
+La comparación que tenemos entre manos es:
 
-![i](/img/cutter04/dis26.png)
+    if (0 < strlen(s))
 
-![i](/img/cutter04/dis27.png)
+Continuemos al siguiente bloque.
 
-![i](/img/cutter04/dis28.png)
+![incrementa el index](/img/cutter04/dis25.png)
 
-![i](/img/cutter04/dis29.png)
+El siguiente bloque carga ESP-0x78 en EAX, y después salva el valor de ESP-0x78 en EDX. La idea es después sumar ESP-0x7c (actualmente con valor de 0) en ESP-0x78, aquí es donde haríamos una iteración de ESP-0x78 si el valor de ESP-0x7c cambia. Después guardaríamos ESP-0x7c (actualmente con valor de 0) en EAX para el siguiente bloque.
 
+Esto seria como el siguiente pseudocódigo para la primera pasada:
 
+    EDX = ESP-0x78 + 0
+    EAX = 0
+
+![shift!](/img/cutter04/dis26.png)
+
+Continuamos con las siguientes instrucciones, la comienza con la suma de ESP-0x78 (valor 0) con la ubicación del string que esta en .rodata (recordar que depende del valor verdadero o falso del if), si nos fijamos esto seria iterar la ubicación del carácter del string, algo como cuando tenemos un s\[i\] dentro de un código...
+
+Ok, continuando con la instrucción 2, tenemos algo interesante, **movzx eax, byte \[eax\]** toma el primer byte de la ubicación de s y lo guarda en EAX. Lo demás lo llena de ceros.
+
+Después, **sub al, 3** resta 3 al valor almacenado en EAX, por ejemplo si su valor era 0x43 (C) ahora valdrá 0x41 (A).
+
+La siguiente instrucción salva este byte en EDX, es decir, si se convirtió a 0x41, este valor se salva en el primer byte de EDX.
+
+![final del loop](/img/cutter04/dis27.png)
+
+Continuamos cargando la ESP-0x7c en EAX, incrementamos el valor de ESP-0x7c (antes 0, ahora 1) y salvamos en EAX. Ejecutamos un jmp de retorno a 0x08048424 (donde empezamos a preparamos para el strlen).
+
+Con esto finalizamos el loop, pero ... ¿que rayos paso?
+
+Si tuviera que traducirlo a código en C seria como el siguiente:
+
+```c
+char buf[100];
+int i;
+
+for (i = 0; i < strlen(s); i++)
+{
+  buf[i] = (char) s[i] - 3;
+}
+```
+
+Yo se que en ninguna parte se crea ese buf de ese tamaño definido ni que tampoco se hace el cast de char de operaciones en entero, pero lo agregue para darle un poco de practicidad.
+
+![string final](/img/cutter04/dis28.png)
+
+Después de acabar este for, salvamos la dirección ESP-0x78 (buf) en EAX. Sumamos el valor de ESP-0x7c (ahora strlen(s)-1) sobre el valor de EAX (la dirección ESP-0x78).
+
+La ultima instrucción, **mov byte\[eax\], 0** escribe el byte 0x00 sobre la ultima ubicación para cortar el _buffer_ y de esa manera poner el carácter null. Ahora si, tenemos un string hecho y derecho en el buffer.
+
+![printf final](/img/cutter04/dis29.png)
+
+Bueno, tenemos un string en el buffer, retornamos ESP-0x78 a EAX con la primera instrucción, luego con la segunda guardamos ese valor (la dirección del stack) sobre ESP-0x4 y finalmente en la tercera instrucción cargamos en el stack el string "%s\\n".
+> Me ahorre las vueltas a la ubicación en memoria para decodificar el string constante que recibe printf
+
+Por supuesto esto fue un preludio para la llamada a printf, donde el primer argumento define que se recibirá un string y el segundo argumento es el string en si que hemos manejado de buffer.
+
+Renombrando todas nuestras variables tenemos un código en C como el siguiente:
+
+```c
+void shift(char *s){
+  char buf[100];
+  int i;
+
+  for (i = 0; i < strlen(s); i++) buf[i] = (char) s[i] - 3;
+  printf("%s\n", buf);
+}
+```
+
+Renombrando en el disassembly también nos queda de la siguiente manera:
+
+![funcion shift final](/img/cutter04/dis20.png)
 
 ## Grafico
 
