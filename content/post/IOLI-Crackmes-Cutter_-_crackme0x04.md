@@ -3,7 +3,7 @@ title: "Reversing de IOLI Crackmes con Cutter - Crackme0x04"
 date: 2018-10-29T11:12:38-06:00
 tags: ["crackme","ioli","cutter","radare","reversing"]
 categories: ["reversing","ELF32"]
-draft: true
+draft: false
 ---
 
 El día de hoy toca resolver el 5to crackme de IOLI, el cual consta de dos funciones para realizar las comparaciones y en cada una realiza un tipo de conversión y comparación muy interesante, comencemos
