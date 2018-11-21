@@ -27,42 +27,43 @@ Tras esto, abrimos el binario en radare2 y le damos una pasada de análisis expe
 
 Analicemos los imports de este binario:
 
-Num | Vaddr      | Bind   | Type   | Name                                                                                                                                                                                                                                                           |
-----|------------|--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--
-1   | 0x00000e50 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::compare(std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>const&)const                                                                         |
-2   | 0x00000e60 | GLOBAL | FUNC   | sprintf                                                                                                                                                                                                                                                        |
-3   | 0x00000e70 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::c_str()const                                                                                                                                                             |
-4   | 0x00000000 | WEAK   | FUNC   | __cxa_finalize                                                                                                                                                                                                                                                 |
-5   | 0x00000e80 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>const&)                                                                         |
-6   | 0x00000e90 | GLOBAL | FUNC   | memset                                                                                                                                                                                                                                                         |
-7   | 0x00000ea0 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::~basic_string()                                                                                                                                                          |
-8   | 0x00000eb0 | GLOBAL | FUNC   | memcpy                                                                                                                                                                                                                                                         |
-9   | 0x00000ec0 | GLOBAL | FUNC   | __cxa_atexit                                                                                                                                                                                                                                                   |
-10  | 0x00000ed0 | GLOBAL | FUNC   | sym.imp.std::basic_ostream<char,std::char_traits<char>>&std::operator<<<char,std::char_traits<char>,std::allocator<char>>(std::basic_ostream<char,std::char_traits<char>>&,std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>const&) |
-11  | 0x00000ee0 | GLOBAL | FUNC   | sym.imp.std::basic_ostream<char,std::char_traits<char>>&std::operator<<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>>&,charconst*)                                                                                                   |
-12  | 0x00000ef0 | GLOBAL | FUNC   | sym.imp.std::allocator<char>::~allocator()                                                                                                                                                                                                                     |
-13  | 0x00000f00 | GLOBAL | FUNC   | __stack_chk_fail                                                                                                                                                                                                                                               |
-14  | 0x00000f10 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::operator=(std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>&&)                                                                                |
-15  | 0x00000f20 | GLOBAL | FUNC   | sym.imp.std::basic_istream<char,std::char_traits<char>>&std::operator>><char,std::char_traits<char>,std::allocator<char>>(std::basic_istream<char,std::char_traits<char>>&,std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>&)      |
-16  | 0x00000f30 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(charconst*,std::allocator<char>const&)                                                                                                                      |
-17  | 0x00000f40 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string()                                                                                                                                                           |
-18  | 0x00000f50 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::length()const                                                                                                                                                            |
-19  | 0x00000f60 | GLOBAL | FUNC   | sym.imp.std::ios_base::Init::Init()                                                                                                                                                                                                                            |
-20  | 0x00000000 | GLOBAL | FUNC   | __gxx_personality_v0                                                                                                                                                                                                                                           |
-21  | 0x00000000 | WEAK   | NOTYPE | _ITM_deregisterTMCloneTable                                                                                                                                                                                                                                    |
-22  | 0x00000f70 | GLOBAL | FUNC   | _Unwind_Resume                                                                                                                                                                                                                                                 |
-23  | 0x00000f80 | GLOBAL | FUNC   | sym.imp.std::allocator<char>::allocator()                                                                                                                                                                                                                      |
-24  | 0x00000000 | GLOBAL | FUNC   | __libc_start_main                                                                                                                                                                                                                                              |
-25  | 0x00000000 | WEAK   | NOTYPE | __gmon_start __                                                                                                                                                                                                                                                 |
-26  | 0x00000000 | WEAK   | NOTYPE | _ITM_registerTMCloneTable                                                                                                                                                                                                                                      |
-27  | 0x00000000 | GLOBAL | FUNC   | sym.imp.std::ios_base::Init::~Init()                                                                                                                                                                                                                           |
-4   | 0x00000000 | WEAK   | FUNC   | __cxa_finalize                                                                                                                                                                                                                                                 |
-20  | 0x00000000 | GLOBAL | FUNC   | __gxx_personality_v0                                                                                                                                                                                                                                           |
-21  | 0x00000000 | WEAK   | NOTYPE | _ITM_deregisterTMCloneTable                                                                                                                                                                                                                                    |
-24  | 0x00000000 | GLOBAL | FUNC   | __libc_start_main                                                                                                                                                                                                                                              |
-25  | 0x00000000 | WEAK   | NOTYPE | __gmon_start __                                                                                                                                                                                                                                                 |
-26  | 0x00000000 | WEAK   | NOTYPE | _ITM_registerTMCloneTable                                                                                                                                                                                                                                      |
-27  | 0x00000000 | GLOBAL | FUNC   | sym.imp.std::ios_base::Init::~Init()                                                                                                                                                                                                                           |
+Num | Vaddr      | Bind   | Type   | Name
+----|------------|--------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+1   | 0x00000e50 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::compare(std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>const&)const
+2   | 0x00000e60 | GLOBAL | FUNC   | sprintf
+3   | 0x00000e70 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::c_str()const
+4   | 0x00000000 | WEAK   | FUNC   | __cxa_finalize
+5   | 0x00000e80 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>const&)
+6   | 0x00000e90 | GLOBAL | FUNC   | memset
+7   | 0x00000ea0 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::~basic_string()
+8   | 0x00000eb0 | GLOBAL | FUNC   | memcpy
+9   | 0x00000ec0 | GLOBAL | FUNC   | __cxa_atexit
+10  | 0x00000ed0 | GLOBAL | FUNC   | sym.imp.std::basic_ostream<char,std::char_traits<char>>&std::operator<<<char,std::char_traits<char>,std::allocator<char>>(std::basic_ostream<char,std::char_traits<char>>&,std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>const&)
+11  | 0x00000ee0 | GLOBAL | FUNC   | sym.imp.std::basic_ostream<char,std::char_traits<char>>&std::operator<<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>>&,charconst*)
+12  | 0x00000ef0 | GLOBAL | FUNC   | sym.imp.std::allocator<char>::~allocator()
+13  | 0x00000f00 | GLOBAL | FUNC   | __stack_chk_fail
+14  | 0x00000f10 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::operator=(std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>&&)
+15  | 0x00000f20 | GLOBAL | FUNC   | sym.imp.std::basic_istream<char,std::char_traits<char>>&std::operator>><char,std::char_traits<char>,std::allocator<char>>(std::basic_istream<char,std::char_traits<char>>&,std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>&)
+16  | 0x00000f30 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(charconst*,std::allocator<char>const&)
+17  | 0x00000f40 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string()
+18  | 0x00000f50 | GLOBAL | FUNC   | sym.imp.std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>::length()const
+19  | 0x00000f60 | GLOBAL | FUNC   | sym.imp.std::ios_base::Init::Init()
+20  | 0x00000000 | GLOBAL | FUNC   | __gxx_personality_v0
+21  | 0x00000000 | WEAK   | NOTYPE | _ITM_deregisterTMCloneTable
+22  | 0x00000f70 | GLOBAL | FUNC   | _Unwind_Resume
+23  | 0x00000f80 | GLOBAL | FUNC   | sym.imp.std::allocator<char>::allocator()
+24  | 0x00000000 | GLOBAL | FUNC   | __libc_start_main
+25  | 0x00000000 | WEAK   | NOTYPE | __gmon_start__
+26  | 0x00000000 | WEAK   | NOTYPE | _ITM_registerTMCloneTable
+27  | 0x00000000 | GLOBAL | FUNC   | sym.imp.std::ios_base::Init::~Init()
+4   | 0x00000000 | WEAK   | FUNC   | __cxa_finalize
+20  | 0x00000000 | GLOBAL | FUNC   | __gxx_personality_v0
+21  | 0x00000000 | WEAK   | NOTYPE | _ITM_deregisterTMCloneTable
+24  | 0x00000000 | GLOBAL | FUNC   | __libc_start_main
+25  | 0x00000000 | WEAK   | NOTYPE | __gmon_start__
+26  | 0x00000000 | WEAK   | NOTYPE | _ITM_registerTMCloneTable
+27  | 0x00000000 | GLOBAL | FUNC   | sym.imp.std::ios_base::Init::~Init()
+
 
 
 Listamos las funciones las cuales tenemos lo siguiente:
