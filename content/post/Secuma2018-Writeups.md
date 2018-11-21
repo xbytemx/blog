@@ -1,5 +1,5 @@
 ---
-title: "Secuma2018 - Writeups diversos"
+title: "Secuma2018 - Writeups"
 date: 2018-11-20T22:54:21-06:00
 draft: false
 tags: ["networking","crypto","forensics","stego","reversing"]
