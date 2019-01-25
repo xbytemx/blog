@@ -6,15 +6,13 @@ tags: ["web","crypto","forensics","exploiting","reversing"]
 categories: ["ctf"]
 ---
 
-Y así, otro CTF finalizo. Nuevas lecciones aprendidas, uno que otro muro por delante, pero eso si, mucha diversión.
-
-<!--more-->
-
 Como previo a las Jornadas de Seguridad y Ciberdefensa 2019 de la Universidad de Alcalá, se realizó un Capture The Flag (CTF) abierto al público pero con el enfoque principal a estudiantes universitarios de la UAH. La duración del CTF fue del viernes 18 a las 10:00hrs hasta el miércoles 23 a las 14:00hrs, UTC+1.
 
 Los retos estuvieron divididos en 5 categorías con una área de puntuación adicional para los que reportaran problemas en la plataforma.
 
 Los retos que llegue a resolver son los siguientes:
+
+<!--more-->
 
 # Crypto
 
@@ -1540,3 +1538,7 @@ Y... tenemos la flag.
 ### Flag
 
 flag{LasCuatroEstaciones}
+
+---
+
+Y así, otro CTF finalizo. Nuevas lecciones aprendidas, uno que otro muro por delante, pero eso si, mucha diversión.
