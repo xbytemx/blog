@@ -1,7 +1,7 @@
 ---
 title: "Flare-on 2014 - Challenge 05: 5get\_it"
 date: 2019-02-05T00:09:23-06:00
-draft: true
+draft: false
 tags: ["flareon","revisitado","flareon2014","radare2","reversing","writeup","dll"]
 categories: ["reversing","ctf"]
 
