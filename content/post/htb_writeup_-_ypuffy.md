@@ -7,7 +7,7 @@ draft: false
 
 ---
 
-Sin duda una de las cosas que mas me gusta de HTB, es el hecho de tener un ecosistema tan variado que permite aprender en horizontales y verticales. Esta maquina me ayudo a conocer como funciona la generacion de llaves de SSH a gran escala y como una mala configuración nos puede llevar a entregarle root a cualquier usuario. Tampoco conocia DOAS, pero se me hizo gracioso como fue relativamente facil homologar lo aprendido de SUDO y RUNAS. 
+Sin duda una de las cosas que mas me gusta de HTB, es el hecho de tener un ecosistema tan variado que permite aprender en horizontales y verticales. Esta máquina me ayudo a conocer como funciona la generación de llaves de SSH a gran escala y como una mala configuración nos puede llevar a entregarle root a cualquier usuario. Tampoco conocía DOAS, pero se me hizo gracioso como fue relativamente fácil homologar lo aprendido de SUDO y RUNAS. 
 
 Sin mas vamos con el write up...
 
@@ -15,7 +15,7 @@ Sin mas vamos con el write up...
 
 # Machine info
 
-La información que tenemos de la maquina es:
+La información que tenemos de la máquina es:
 
 Name     | Maker     | OS    | IP Address 
 ---      | ---       | ---   | ---
@@ -27,7 +27,7 @@ Su tarjeta de presentación es:
 
 # Port Scanning
 
-Comenzamos por escanear todos los puertos TCP abiertos en la maquina, con la finalidad de poder encontrar los servicios ejecutándose en la maquina:
+Comenzamos por escanear todos los puertos TCP abiertos en la máquina, con la finalidad de poder encontrar los servicios ejecutándose en la máquina:
 
 Primero un nmap de todos los puertos, sin resolución de dns y un haciendo un TCP syn scan:
 
@@ -61,7 +61,7 @@ Nmap done: 1 IP address (1 host up) scanned in 123.17 seconds
            Raw packets sent: 150935 (6.641MB) | Rcvd: 129858 (5.194MB)
 ```
 
-Como backup a algun puerto coqueto que se haya hecho pasar por filtred, realizamos un masscan:
+Como backup a algún puerto coqueto que se haya hecho pasar por filtrado, realizamos un masscan:
 
 ```
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.107
@@ -154,7 +154,7 @@ Nmap done: 1 IP address (1 host up) scanned in 29.32 seconds
            Raw packets sent: 9 (372B) | Rcvd: 6 (248B)
 ```
 
-Con este primer vistazo ya tenemos en nombre de la maquina, el dominio y un poco de información contradictoria (banner httpd de openbsd y smb-os de Windows 6.1)
+Con este primer vistazo ya tenemos en nombre de la máquina, el dominio y un poco de información contradictoria (banner httpd de openbsd y smb-os de Windows 6.1)
 
 # LDAP
 
@@ -300,7 +300,7 @@ drw-rw-rw-          0  Tue Jul 31 22:16:50 2018 ..
 ```
 
 # PPK File and login
-Ok, tenemos un archivo ppk, que despues de googlear, veremos que es un formato usado en putty para manera llaves, por lo que descomponemos el archivo para usarlo en openssh. Tras convertirlo, usemos la llave privada para acceder a la cuenta de alice:
+Ok, tenemos un archivo ppk, que después de googlear, veremos que es un formato usado en putty para manera llaves, por lo que descomponemos el archivo para usarlo en openssh. Tras convertirlo, usemos la llave privada para acceder a la cuenta de alice:
 
 ```
 xbytemx@laptop:~/htb/ypuff$ puttygen my_private_key.ppk -O private-openssh -o id_rsa-ypuff
@@ -325,9 +325,9 @@ ypuffy$
 
 # At bob8791
 
-Despues de una rapida revisión en los alrededores de alice, empezamos a espiar que hay con bob (me siento como si fuera eve):
+Después de una rápida revisión en los alrededores de alice, empezamos a espiar que hay con bob (me siento como si fuera eve):
 
-> Como dato curioso, bob8791 y alice1978, hacen referencia a los personajes ficticios que fueron inventados para el paper de "A method for obtaining digital signatures and public-key cryptosystems." en 1978!
+> Como dato curioso, bob8791 y alice1978, hacen referencia a los personajes ficticios que fueron inventados para el artículo de "A method for obtaining digital signatures and public-key cryptosystems." en 1978!
 
 ```
 ypuffy$ cd /home/bob8791
@@ -368,11 +368,11 @@ CREATE TABLE keys (
 grant select on principals,keys to appsrv;
 ```
 
-Basicamente vemos que crea las tablas de principals y keys, y se le otorga acceso a appsrv para que pueda usarlos.
+Básicamente vemos que crea las tablas de principals y keys, y se le otorga acceso a appsrv para que pueda usarlos.
 
 # Config files
 
-Veamos que hay en algunos archivos de configuración para hacernos una mejor idea de que realiza esta maquina.
+Veamos que hay en algunos archivos de configuración para hacernos una mejor idea de que realiza esta máquina.
 
 ## doas
 
@@ -384,11 +384,11 @@ permit keepenv :wheel
 permit nopass alice1978 as userca cmd /usr/bin/ssh-keygen
 ```
 
-Asi que por lo visto alice puede ejecutar ssh-keygen como userca, checaremos esto mas tarde.
+Así que por lo visto alice puede ejecutar ssh-keygen como userca, utilizaremos esta información esto más tarde.
 
 ## httpd
 
-¿Se acuerdan que aun teniamos el servicio TCP/80 sin enumerar? Pues bien, ya como alice podemos investigar un poco mas:
+¿Se acuerdan que aun teníamos el servicio TCP/80 sin enumerar? Pues bien, ya como alice podemos investigar un poco mas:
 
 ```
 ypuffy$ cat /etc/httpd.conf 
@@ -412,7 +412,7 @@ server "ypuffy.hackthebox.htb" {
 ypuffy$
 ```
 
-Con razon mi gobuster fallo, todo lo que no fuera userca y sshauth se iba a drop. userca tiene un tema interesante, como vemos sirve para compartir el contenido del directorio. sshauth llama a un socket, si recordamos sshauth tambien era el nombre del archivo SQL que encontramos antes.
+Con razón mi gobuster fallo, todo lo que no fuera userca y sshauth se iba a drop. userca tiene un tema interesante, como vemos sirve para compartir el contenido del directorio. sshauth llama a un socket, si recordamos sshauth también era el nombre del archivo SQL que encontramos antes.
 
 ## SSHd
 
@@ -435,11 +435,12 @@ X11Forwarding no
 Subsystem       sftp    /usr/libexec/sftp-server
 ```
 
-Root solo puede entrar con certificados, no hay autenticación con contraseñas ni challenges, no hay fwd de ningun tipo.
+Root solo puede entrar con certificados, no hay autenticación con contraseñas ni challenges, no hay fwd de ningún tipo.
 
-Tambien solo las llaves en .ssh/authorized\_keys son las validas, pero el usuario nobody puede autorizar via el servicio web (/run/wsgi/sshauthd.socket) pasando los argumentos de tipo keys t el usario que solicita.
+También solo las llaves en .ssh/authorized\_keys son las validas, pero el usuario nobody puede autorizar via el servicio web (/run/wsgi/sshauthd.socket) pasando los argumentos de tipo keys t el usuario que solicita.
 
-Principals, tambien usa el mismo servicio web, cambiando el tipo a principals.
+Principals, usa el mismo servicio vía HTTPd, cambiando el tipo a principals.
+
 ## CA keys
 
 Como pudimos ver en el archivo de SSHd, las llaves de CA se encuentran en el home de userca:
@@ -499,7 +500,7 @@ drwxrwxrwt  8 root       wheel   512B Jan  9 03:10 ..
 ypuffy$ chmod 777 meh.pub
 ```
 
-Al final hice accedible mi llave publica meh para cualquiera.
+Al final hice accesible mi llave publica meh para cualquiera.
 
 ## Security zone of root
 
@@ -514,7 +515,7 @@ Ya tenemos la zona, ahora pasemos al firmado.
 
 ## Signing key to trusted CA
 
-Como hemos visto, el archivo de CA solo podia ser accedido por el usuario userca, por lo que tomando en cuenta las capacidades de DOAS, firmamos nuestro certificado para que tenga acceso a la misma zona de root.
+Como hemos visto, el archivo de CA solo podía ser accedido por el usuario userca, por lo que tomando en cuenta las capacidades de DOAS, firmamos nuestro certificado para que tenga acceso a la misma zona de root.
 
 ```
 ypuffy$ doas -u userca /usr/bin/ssh-keygen -s /home/userca/ca -I miau3 -n 3m3rgencyB4ckd00r -z 1 /tmp/.miu/meh.pub 
