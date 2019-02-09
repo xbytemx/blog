@@ -15,11 +15,11 @@ Bien comenzamos por descomprimir el challenge "C2.zip", el cual esta protegido p
 
 > Nota: Todos los archivos de challenge se encuentran dentro de un zip que se descarga [aquí](http://www.flare-on.com/files/2014_FLAREOn_Challenges.zip)
 
-![unzip](/img/flareon-2014-challenge-02/unzip.png)
+![unzip](/img/flareon2014-c2/unzip.png)
 
 Al ver el contenido tenemos 2 archivos, una imagen y un archivo html:
 
-![file](/img/flareon-2014-challenge-02/file-of-content.png)
+![file](/img/flareon2014-c2/file-of-content.png)
 
 Si analizamos el documento html, nos daremos cuenta que la pagina corresponde a la original del primer flare-on, por lo que el código en si, es igual que la pagina que estaba ejecutándose en dicho momento:
 
@@ -198,7 +198,7 @@ Curioso el include de php:
 
 Veamos que nos dice strings de este archivo:
 
-![php-in-png](/img/flareon-2014-challenge-02/php-in-png.png)
+![php-in-png](/img/flareon2014-c2/php-in-png.png)
 
 Hey parece que tenemos un código php dentro de la imagen:
 
@@ -226,7 +226,7 @@ Con $terms tenemos las palabras que estaremos utilizando, mientras que $order no
 
 Para esto podemos usar el mismo código y crear un archivo c1.php, solo que en lugar de correr eval, corremos print:
 
-![do_me](/img/flareon-2014-challenge-02/do-me.png)
+![do_me](/img/flareon2014-c2/do-me.png)
 
 Ok, la salida del comando es el siguiente código:
 
@@ -243,7 +243,7 @@ En esta parte, tenemos 3 definiciones que después pasan por eval(), por lo que 
 
 Esto parece base64, veamos si lo podemos decodificar:
 
-![var1-base64-decode](/img/flareon-2014-challenge-02/var1-base64-decode.png)
+![var1-base64-decode](/img/flareon2014-c2/var1-base64-decode.png)
 
 Ok, ahora tenemos las siguientes instrucciones:
 
@@ -287,7 +287,7 @@ print regex_hex.sub(replace_hex, regex_dec.sub(replace_dec, line2))
 
 Esto resuelve los encoding y nos devuelve los siguientes strings:
 
-![decode dec and hex](/img/flareon-2014-challenge-02/decode-dec-and-hex.png)
+![decode dec and hex](/img/flareon2014-c2/decode-dec-and-hex.png)
 
 Si sustituimos DOT, AT y DASH en "a11DOTthatDOTjava5crapATflareDASHonDOTcom" tenemos "a11.that.java5crap@flare-on.com", la cual conforma la flag del reto.
 
