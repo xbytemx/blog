@@ -25,7 +25,7 @@ Ok, tenemos el primer vistazo que nos dice que tratamos con una DLL que no se en
 
 Continuemos identificándolo en radare2:
 
-![Analisis base de Radare2](/img/flareon2014-c5/ia1.png)
+![Análisis base de Radare2](/img/flareon2014-c5/ia1.png)
 
 El show info all o _ia_ de radare2 nos entrega mucha información, que coincide con lo primero que empezamos a observar, adicionalmente nos devuelve que tenemos bastante funciones importadas (al menos 82) las cuales no coloco en imagen para no perderlas de vista:
 
@@ -114,7 +114,7 @@ El show info all o _ia_ de radare2 nos entrega mucha información, que coincide 
 | 5   | 0x10014148 | NONE | FUNC | USER32.dll\_EndDialog                               |
 | 6   | 0x1001414c | NONE | FUNC | USER32.dll\_FindWindowA                             |
 
-Tenemos básicamente 3 bibliotecas dinámicas de las que importamos funciones: user32.dll, kernel32.dll y advapi32.dll. Decidí que para este writeup tengamos un enfoque mas estático de lo que a continuación sucede, ya que en un análisis mas tradicional, continuariamos por la parte dinámica.
+Tenemos básicamente 3 bibliotecas dinámicas de las que importamos funciones: user32.dll, kernel32.dll y advapi32.dll. Decidí que para este writeup tengamos un enfoque mas estático de lo que a continuación sucede, ya que en un análisis mas tradicional, continuaríamos por la parte dinámica.
 
 Comenzamos por llamar al shorcut de análisis:
 
@@ -421,7 +421,7 @@ Como el resultado de afl era muy extenso, decidí convertirlo en tabla:
 | 0x1001345c | 13   | 184          | fcn.1001345c                                               |
 | 0x10013674 | 1    | 6            | sub.KERNEL32.dll\_RtlUnwind\_674                             |
 
-Si ordenamos esta tabla por tamaño, tomando unicamente los 10 primeros lugares tendríamos algo como lo siguiente:
+Si ordenamos esta tabla por tamaño, tomando únicamente los 10 primeros lugares tendríamos algo como lo siguiente:
 
 | address    | nbbs | size | name                                 |
 |------------|------|------|--------------------------------------|
@@ -451,21 +451,21 @@ Rango: 0x10001240 - 0x10009335
 
 Esta función no recibe nada ni devuelve nada, pero lo que si es que algo hace porque podemos ver claramente en la imagen la palabra flare-on mientras se sube al stack. 
 
-Ahora bien, este podria ser nuestro destino final en caso de exito, es decir, el win msg. Tomare esto como valido y continuare viendo como llegar hasta aquí...
+Ahora bien, este podría ser nuestro destino final en caso de éxito, es decir, el win msg. Tomare esto como valido y continuare viendo como llegar hasta aquí...
 
 Para ello lo primero seria ver que funciones llaman a esta función, para ello ubicaremos cuales son las referencias cruzadas e iremos de función en función.
 
 ![xref 0x10001240](/img/flareon2014-c5/axg-10001240.png)
 
-Como podemos observar, fnc 0x10009af0 es la primera y unica función que llama a 0x10001240, veamos su contenido:
+Como podemos observar, fnc 0x10009af0 es la primera y única función que llama a 0x10001240, veamos su contenido:
 
 ![pdf 0x10009af0](/img/flareon2014-c5/pdf-10009af0.png)
 
-Tenemos una comparación a 0 en 0x100194fc, que en caso de ser mayor a 0, llama a la función winmsg, pero antes va a llamar a otra función, fcn 0x10001060. Veamos que hay en esta funcion previa:
+Tenemos una comparación a 0 en 0x100194fc, que en caso de ser mayor a 0, llama a la función winmsg, pero antes va a llamar a otra función, fcn 0x10001060. Veamos que hay en esta función previa:
 
 ![pd25 @ 0x10009af0](/img/flareon2014-c5/pd25-10001060.png)
 
-Esta función como podemos observar se encarga de colocar las equivalencias de esas ubicaciones a 0, como alguna especie de inicializador/limpiador. Observamos que tiene 91 referencias! He inclusive por su tamaño no pude extraer toda la función, pero debido a que solo se encarga de inicializar/limpiar (no recibe ni devuelve nada), decidi colocarlo en la siguiente tabla:
+Esta función como podemos observar se encarga de colocar las equivalencias de esas ubicaciones a 0, como alguna especie de controlador/limpiador. Observamos que tiene 91 referencias! He inclusive por su tamaño no pude extraer toda la función, pero debido a que solo se encarga de inicializar/limpiar (no recibe ni devuelve nada), decidí colocarlo en la siguiente tabla:
 
 | #   | Address    | Value |
 | --- | ---        | ---   |
@@ -512,7 +512,7 @@ Esta función como podemos observar se encarga de colocar las equivalencias de e
 | 41  | 0x100194fc | 0     |
 | 42  | 0x10019500 | 0     |
 
-Prestando atención al penultimo resultado, podemos observar que es el valor que hemos evaluado durante la comparación en fcn 0x10009af0, veamos de que manera si podemos escribirlo buscando la referencia hacia esta direccion:
+Prestando atención al penúltimo resultado, podemos observar que es el valor que hemos evaluado durante la comparación en fcn 0x10009af0, veamos de que manera si podemos escribirlo buscando la referencia hacia esta dirección:
 
 ![axt 0x100194fc](/img/flareon2014-c5/axt-100194fc.png)
 
@@ -522,11 +522,11 @@ Como podemos ver, estan las dos funciones que acabamos de explorar, mas una terc
 
 Tuve nuevamente que reducir el tamaño de fuente para poder tomar la captura. 
 
-Bueno, como podemos apreciar, esta funcion tiene varias cosas diferentes y a la vez comunes con la función anterior. La primera cosa en comun es que tambien es llamada desde sub.USER32.dll\_GetAsyncKeyState\_10009eb0, presenta un compare, luego set a 0 y finalmente un set a 1 para activar el siguiente flujo o brinco a función.
+Bueno, como podemos apreciar, esta función tiene varias cosas diferentes y a la vez comunes con la función anterior. La primera cosa en común es que también es llamada desde sub.USER32.dll\_GetAsyncKeyState\_10009eb0, presenta un compare, luego set a 0 y finalmente un set a 1 para activar el siguiente flujo o brinco a función.
 
-Su caracteristica principal, es que pareciera que tenemos varios if concatenados, siendo precisos unos 5 cmp, que si ninguno tiene la flag activada, pone en 0 la flag actual y levanta la siguiente. Pero todos los caminos conducen a roma, es decir, todas las comparaciones al final devuelve "o".
+Su característica principal, es que pareciera que tenemos varios if concatenados, siendo precisos unos 5 cmp, que si ninguno tiene la flag activada, pone en 0 la flag actual y levanta la siguiente. Pero todos los caminos conducen a roma, es decir, todas las comparaciones al final devuelve "o".
 
-La función anterior (0x10009af0) devolvia "m", por lo que sea lo que sea GetAsyncKeyState, esta reciviendo estos valores char cuando llama a las funciones.
+La función anterior (0x10009af0) devolvía "m", por lo que sea lo que sea GetAsyncKeyState, esta recibiendo estos valores char cuando llama a las funciones.
 
 [GetAsyncKeyState](https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getasynckeystate)
 ```C
@@ -535,7 +535,7 @@ SHORT GetAsyncKeyState(
 );
 ```
 
-Esta función basicamente recibe la tecla a evaluar y nos devuelve si fue o esta siendo presionada.
+Esta función básicamente recibe la tecla a evaluar y nos devuelve si fue o esta siendo presionada.
 
 Ok, veamos que hace la función sub.USER32.dll\_GetAsyncKeyState\_10009eb0:
 
@@ -543,7 +543,7 @@ Ok, veamos que hace la función sub.USER32.dll\_GetAsyncKeyState\_10009eb0:
 
 El primer vistazo, nos revela muchos jumps, inclusive estamos hablando de un switch case, lo cual seria el tipo de loop adecuado para esto.
 
-Las primeras 3 instrucciones corresponden al stack frame de 8 direcciones, las siguientes 11 instrucciones, desde _mov eax, 8_ hasta _cmp edx, 0xde_ son las condicionales que nos haran mantenernos dentro de un loop de switch case, basicamente desde 8 hasta 222.
+Las primeras 3 instrucciones corresponden al stack frame de 8 direcciones, las siguientes 11 instrucciones, desde _mov eax, 8_ hasta _cmp edx, 0xde_ son las condicionales que nos haran mantenernos dentro de un loop de switch case, básicamente desde 8 hasta 222.
 
 ![pdf @ sub.USER32.dll\_GetAsyncKeyState\_10009eb0](/img/flareon2014-c5/pdf2-10009eb0.png)
 
@@ -553,9 +553,9 @@ Veamos que sucede dentro de este switch:
 
 ![pdf @ sub.USER32.dll\_GetAsyncKeyState\_10009eb0](/img/flareon2014-c5/pdf3-10009eb0.png)
 
-Despues de la evaluación inicial, el counter es pasado como argumento a GetAsyncKeyState, es decir si local\_4h vale 0x2b, se evaluara si la tecla '\*' fue presionada. Ese valor es compartido (tecla presionada ahora o antes) y se compara en el switch, si es no es igual, se va al caso ultimo, si es igual llama a la función correspondiente y brinca hacia el final (0x1000a3a6). En pocas palabras si la tecla "A" o la que sea es presionada, su función correspondiente es llamada.
+Después de la evaluación inicial, el counter es pasado como argumento a GetAsyncKeyState, es decir si local\_4h vale 0x2b, se evaluara si la tecla '\*' fue presionada. Ese valor es compartido (tecla presionada ahora o antes) y se compara en el switch, si es no es igual, se va al caso ultimo, si es igual llama a la función correspondiente y brinca hacia el final (0x1000a3a6). En pocas palabras si la tecla "A" o la que sea es presionada, su función correspondiente es llamada.
 
-Esto implica que nosotros controlamos el valor de las flags, presionandolas en el orden correcto debemos llegar a llamar a la función bandera (0x10001240).
+Esto implica que nosotros controlamos el valor de las flags, presionándolas en el orden correcto debemos llegar a llamar a la función bandera (0x10001240).
 
 Entonces ya que hemos entendido hagamos el reverso de cada letra presionada mediante el siguiente burdo script en python:
 
@@ -592,11 +592,25 @@ La salida del comando nos devuelve el string:
 
 La letra faltante, "m", se devuelve a la salida del la función de reseteo.
 
-Si ejecutamos el dll e ingresamos la salida del comando nos aparecera el siguiente mensaje:
+Validemos el DLL contra yara rules:
+
+```
+xbytemx@laptop:~/flare-on2014/challenge05$ yara ~/git/rules/Antidebug_AntiVM_index.yar 5get_it
+anti_dbg 5get_it
+keylogger 5get_it
+win_registry 5get_it
+win_files_operation 5get_it
+```
+
+Vemos que da positivo contra tecnicas de antidbg, keylogger, win\_registry y win\_files\_operation. Por ello crearemos un prefix de wine en donde ejecutemos con calma la dll.
+
+Si ejecutamos el dll e ingresamos la salida del comando nos aparecerá el siguiente mensaje:
 
 > wineconsole rundll32 5get\_it 
 
 ![wineconsole rundll32 5get\_it](/img/flareon2014-c5/wine-win.png)
+
+> Nota: La dll se ejecuta en un prefix recien creado para ser eliminado despues.
 
 Traduciendo al formato de la flag:
 
