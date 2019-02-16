@@ -6,7 +6,7 @@ categories: ["htb","pentesting"]
 draft: false
 
 ---
-AAAA
+Me gustan estas maquinas, porque no sabes nunca lo que podrás aprender o con cuantas paredes te vas a topar. Aprendí sobre como pasar la hash desde mssql, como ejecutar remotamente powershell y finalmente que a veces es mas fácil compilar y ejecutar que esperar soluciones mágicas. 
 <!--more-->
 
 # Machine info
