@@ -6,9 +6,11 @@ categories: ["htb","pentesting"]
 ---
 
 Si tuviera que resumir access en unas pocas frases seria: 
+
 - Enumera a la organización
 - Busca en todas las esquinas
 - Los de ingeniería siempre tienen más permisos
+
 <!--more-->
 
 # Machine info
