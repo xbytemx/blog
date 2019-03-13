@@ -1,6 +1,3 @@
-[submodule "themes/steam"]
-	path = themes/steam
-	url = https://github.com/digitalcraftsman/hugo-steam-theme
 [submodule "themes/even"]
 	path = themes/even
 	url = https://github.com/olOwOlo/hugo-theme-even.git
