@@ -1,7 +1,7 @@
 baseURL = "https://xbytemx.github.io/"
 languageCode = "en"
-defaultContentLanguage = "es"
-title = "xbytemx blog"
+defaultContentLanguage = "en"
+title = "xbytemx"
 enableRobotsTXT = true
 enableEmoji = true
 theme = "even"
@@ -40,7 +40,7 @@ preserveTaxonomyNames = true
   url = "/categories/"
 
 [params]
-	title = "xbytemx blog"
+	title = "xbytemx"
 	version = "3.x"
 	subtitle = "Un lugar más donde dejar anecdotas"
 	copyright = "Released under the MIT license."
@@ -98,3 +98,4 @@ preserveTaxonomyNames = true
   [params.social]
     c-twitter = "https://twitter.com/xbytemx"
     g-github = "https://github.com/xbytemx"
+    z-telegram = "@tonypalma"
