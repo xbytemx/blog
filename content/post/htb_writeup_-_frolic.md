@@ -1085,7 +1085,7 @@ Vemos que se trata de un binario enlazado dinámicamente, por lo que tenemos que
 
 ```text
 $ ldd /home/ayush/.binary/rop
-        linux-gate.so.1 =&gt;  (0xb7fda000)
+        linux-gate.so.1 >  (0xb7fda000)
         libc.so.6 > /lib/i386-linux-gnu/libc.so.6 (0xb7e19000)
         /lib/ld-linux.so.2 (0xb7fdb000)
 
@@ -1198,6 +1198,12 @@ La función `sym.imp.setuid` vemos que es lanzada con el parámetro 0, esto sign
 En vuln, declaramos el stack frame de 0x38 o 56 en decimal, volvemos a restarle 8 bytes mas, con un total de 64. Subimos el argumento que recibimos de main a ESP, guardamos la dirección de EBP-0x30 en EAX, subiendo finalmente este al ESP+0x4. Llamamos a string copy, el cual recibió la dirección de destino (EBP-0x30) y el origen argumento de main, el cual salva en EBP-0x30 el valor del string que pasemos como argumento en main.
 
 La función vulnerable básicamente lo que hace después es imprimir primero "\[+\] Message sent: " + el contenido de el argumento de main. Lo peligroso de esta función, es que strcpy copio tal cual lo que recibe del origen hasta encontrar un `\x00`. No valida que el destino soporte el tamaño completo del origen. Solo le interesa copiar y pegar hasta encontrar un NULL. Esto nos permite como atacantes poder abusar y hacer un buffer overflow al salirnos de EBP-0x30.
+
+![stack](https://www.coengoedegebure.com/content/images/2018/08/stackbuffer.png)
+
+![buffer overflow write](https://www.coengoedegebure.com/content/images/2018/08/memoryoverflow-1.png)
+
+![buffer overflow](https://www.coengoedegebure.com/content/images/2018/08/stack_bufferoverflowabc.png)
 
 Por lo que si subo 0x30 + 4 bytes que es donde debería estar la EBP (dirección del puntero base), estaríamos llegando al EIP (dirección de retorno):
 
