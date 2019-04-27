@@ -1,13 +1,13 @@
 ---
 title: "HTB write-up: Redcross"
 date: 2019-04-14T00:56:34-05:00
-description: ""
-tags: ["hackthebox", "htb", "boot2root", "pentesting"]
+description: "Redcross: A HTB machine that show you how changing values of a DB, can leverage to a privesc"
+tags: ["hackthebox", "htb", "boot2root", "pentesting", "sudoers", "RCE"]
 categories: ["htb", "pentesting"]
 
 ---
 
-z
+RedCross fue una maquina que personalmente después de resolverla no me gusto mucho. Pero no fue hasta que realice el write-up que me di cuenta que es bastante realista al inicio, porque efectúa algunas técnicas para evitar el uso de herramientas automatizadas como sqlmap y nmap, las vulnerabilidades hacia el privesc son de diseño.
 
 <!--more-->
 
