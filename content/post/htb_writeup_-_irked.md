@@ -443,7 +443,7 @@ drwxr-xr-x  2 djmardov djmardov 4.0K May 11  2018 .
 drwxr-xr-x 18 djmardov djmardov 4.0K Nov  3 04:40 ..
 ```
 
-En resumen, no tenemos acceso a algunas de sus carpetas y archvos, pero confirmamos la existencia de user.txt y que hay un archivo `.backup` que si podemos leer.
+En resumen, no tenemos acceso a algunas de sus carpetas y archivos, pero confirmamos la existencia de user.txt y que hay un archivo `.backup` que si podemos leer.
 
 ```text
 ircd@irked:~/Unreal3.2$ cat /home/djmardov/Documents/.backup
@@ -465,6 +465,7 @@ Content-Type: text/html
 Date: Thu, 04 Apr 2019 00:02:34 GMT
 ETag: "48-56c2e413aa86b-gzip"
 Keep-Alive: timeout=5, max=100
+
 Last-Modified: Mon, 14 May 2018 18:00:02 GMT
 Server: Apache/2.4.10 (Debian)
 Vary: Accept-Encoding
@@ -474,7 +475,9 @@ Vary: Accept-Encoding
 <b><center>IRC is almost working!</b></center>
 ```
 
-Ahí había una imagen, así que descargemosla para revisarla.
+![irked](/img/htb-irked/irked.jpg)
+
+Ahí había una imagen, así que vamos a descargarla para revisarla.
 
 ```text
 xbytemx@laptop:~/htb/irked$ wget 10.10.10.117/irked.jpg
