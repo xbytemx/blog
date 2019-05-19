@@ -1,11 +1,13 @@
 ---
 title: "HTB write-up: Lightweight"
 date: 2019-05-10T01:32:41-05:00
-description: ""
+description: "Lightweight has capabilities, pcaps and ldap connections that you must see!"
 tags: ["hackthebox", "htb", "boot2root", "pentesting", ""]
 categories: ["htb", "pentesting"]
 
 ---
+
+Esta maquina ha resultado mas divertida de lo esperado. Me gusta revisar paquetes de trafico y entender como es que los protocolos funcionan. En lo general a lo especifico, el enjaulado me gusto mucho, la forma de analizar la app y posteriormente interceptarla también y la escalación se me hizo de lo mas real en cuanto a errores de los admin se refiere.
 
 <!--more-->
 
