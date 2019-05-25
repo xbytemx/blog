@@ -2,7 +2,7 @@
 title: "HTB write-up: Lightweight"
 date: 2019-05-10T01:32:41-05:00
 description: "Lightweight has capabilities, pcaps and ldap connections that you must see!"
-tags: ["hackthebox", "htb", "boot2root", "pentesting", ""]
+tags: ["hackthebox", "htb", "boot2root", "pentesting", "ldap"]
 categories: ["htb", "pentesting"]
 
 ---
