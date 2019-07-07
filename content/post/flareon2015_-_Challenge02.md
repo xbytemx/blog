@@ -434,24 +434,24 @@ Este buffer invierte el orden, por lo que empezamos desde el ultimo hasta el pri
 
 Si seguimos el orden inverso de las instrucciones, lo primero seria la parte de ADC, en donde guardamos en AL el valor de AL+AH+1, ya que EDI es comparado contra AL. Así que:
 
-EDI = AL_preADC + AH + 1
-EDI -AH -1 = AL_preADC
+> EDI = AL_preADC + AH + 1
+> EDI -AH -1 = AL_preADC
 
 Pero AL_preADC se encuentra protegida por el XOR de 0xc7, por lo que si:
 
-AL_preADC = AL_original ^ 0xc7,
+> AL_preADC = AL_original ^ 0xc7,
 
 Entonces:
 
-(EDI - AH - 1) ^ 0xc7 = AL_original
+> (EDI - AH - 1) ^ 0xc7 = AL_original
 
 Ahora debemos despejar AH para poder realizar la ecuación `xD`.
 
-AH = shiftl(AH_preShift, CL)
+> AH = shiftl(AH_preShift, CL)
 
 Si recordamos antes de eso, AH_preShift era 0x01, por lo que:
 
-AH = shiftl(1, CL)
+> AH = shiftl(1, CL)
 
 Entonces, CL se había cambiado con DL, y DL valía BL&3.
 
@@ -478,8 +478,7 @@ l_acomulada = 0
 
 
 for d in range(len(buf)):
-    a_h = (1 << shift) & 0xff
-    l = (buf[d] - a_h - 1) ^ 0xc7
+    l = (buf[d] - ((1 << shift) & 0xff) - 1) ^ 0xc7
     flag += chr(l)
 
     l_acomulada += buf[d]
