@@ -1,5 +1,5 @@
 ---
-title: "Flare-On 2014 - Challenge 01: Bob Doge"
+title: "Flare-on 2014 - Challenge 01: Bob Doge"
 date: 2018-10-21T20:25:36-05:00
 draft: false
 tags: ["flareon","revisitado","flareon2014","dotnet","reversing","writeup"]

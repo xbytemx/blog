@@ -1,12 +1,11 @@
 ---
-title: "Flare-On 2015 - Challenge 01"
+title: "Flare-on 2015 - Challenge 01"
 date: 2019-07-01T22:25:36-05:00
-draft: false
-tags: ["flareon","revisitado","flareon2015","dotnet","reversing","writeup"]
+tags: ["flareon","revisitado","flareon2015","reversing","writeup"]
 categories: ["reversing","ctf"]
 ---
 
-Iniciamos con mas retos de flareon, ya que ya esta muy cerca. Ahora comenzaremos por los retos de 2 en 2 de cada año hasta terminar lo mas posibles.
+Iniciamos con mas retos de Flare-On, ya que ya esta muy cerca. Ahora comenzaremos por los retos de 2 en 2 de cada año hasta terminar lo mas posibles.
 <!--more-->
 
 Comenzamos por descargar el [zip](http://www.flare-on.com/files/2015_FLAREOn_Challenges.zip) que contiene todos los challenges, para posteriormente ir a cada challenge y resolverlos.
@@ -125,21 +124,21 @@ Analicemos lo que sucede después del stack frame para esta función:
 Guardamos el valor original de EAX en una variable y subimos **-10** decimal con signo al stack. Llamamos a GetStdHandle con este argumento, lo cual significa que obtendremos un handle para el STDIN via CONIN$. [Véase mas aquí](https://docs.microsoft.com/en-us/windows/console/getstdhandle)
 
 ```
-│           0x00401011      8945f4         mov dword [var_ch], eax
-│           0x00401014      6af5           push 0xfffffffffffffff5     ; DWORD nStdHandle
-│           0x00401016      ff1558204000   call dword [sym.imp.kernel32.dll_GetStdHandle] ; 0x402058 ; HANDLE GetStdHandle(DWORD nStdHandle)
+0x00401011      8945f4         mov dword [var_ch], eax
+0x00401014      6af5           push 0xfffffffffffffff5     ; DWORD nStdHandle
+0x00401016      ff1558204000   call dword [sym.imp.kernel32.dll_GetStdHandle] ; 0x402058 ; HANDLE GetStdHandle(DWORD nStdHandle)
 ```
 
 El valor retornado de GetStdHandle es guardado en var_ch, mientras que ahora en lugar del valor -10, le pasaremos **-11**, lo cual significa el STDOUT o CONOUT$. De esta manera el programa ya tiene las direcciones de buffer (handles) para poder interactuar en entrada y salida con nuestra consola.
 
 ```
 0x0040101c      8945f8         mov dword [hFile], eax
-│           0x0040101f      6a00           push 0                      ; LPOVERLAPPED lpOverlapped
-│           0x00401021      8d45fc         lea eax, [lpNumberOfBytesWritten]
-│           0x00401024      50             push eax                    ; LPDWORD lpNumberOfBytesWritten
-│           0x00401025      6a2a           push 0x2a                   ; '*' ; 42 ; DWORD nNumberOfBytesToWrite
-│           0x00401027      68f2204000     push str.Let_s_start_out_easy____Enter_the_password ; 0x4020f2 ; "Let's start out easy\r\nEnter the password>" ; LPCVOID lpBuffer
-│           0x0040102c      ff75f8         push dword [hFile]          ; HANDLE hFile
+0x0040101f      6a00           push 0                      ; LPOVERLAPPED lpOverlapped
+0x00401021      8d45fc         lea eax, [lpNumberOfBytesWritten]
+0x00401024      50             push eax                    ; LPDWORD lpNumberOfBytesWritten
+0x00401025      6a2a           push 0x2a                   ; '*' ; 42 ; DWORD nNumberOfBytesToWrite
+0x00401027      68f2204000     push str.Let_s_start_out_easy____Enter_the_password ; 0x4020f2 ; "Let's start out easy\r\nEnter the password>" ; LPCVOID lpBuffer
+0x0040102c      ff75f8         push dword [hFile]          ; HANDLE hFile
 0x0040102f      ff1564204000   call dword [sym.imp.kernel32.dll_WriteFile] ; 0x402064 ; BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped)
 ```
 
@@ -172,6 +171,8 @@ Después de escribir en pantalla, la siguiente función ReadFile, tomara el text
 
 Limpiamos ECX y iniciamos un loop. En este loop estaremos tomando cada carácter que escribimos anteriormente y le aplicaremos la operación XOR contra **0x7d**, posteriormente compararemos el resultado con lo que se encuentre en la ubicación 0x402140 mas el index de la letra respectiva.
 
+![flow](/img/flareon2015-c1/flow.png)
+
 Si por algún motivo, en alguna iteración las letras no son iguales (entiéndase letra como el carácter en turno ^ 0x7d), entonces el loop saldrá hacia la dirección 0x40107b. Caso de que sean iguales, incrementara el contador ECX y validara si este ya llego a 24 decimal.
 
 Esto significa que la longitud a comparar es de 24 caracteres y la del buffer es de 50, y que cada letra puede ser reversible si aplicamos un xor 0x7d al buffer de comparación. Hagamos este paso después de terminar el análisis estático.
@@ -200,6 +201,43 @@ Si todas las letras anteriores coincidieron, entonces se escribirá en el STDOUT
 ```
 
 Caso de que alguna letra no coincida, se realizaba el jump a `0x0040107b` y se imprime en el STDOUT el mensaje "You are failure\r\n".
+
+Si generamos el pseudocódigo tenemos:
+
+```c
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <windows.h>
+int32_t entry_point(void);
+char *g1 = "\x1f\x08\x13\x13\x04\x22\x0e\x11\x4d\x0d\x18\x3d\x1b\x11\x1c\x0f\x18\x50\x12\x13\x53\x1e\x12\x10";
+int32_t g2 = 0;
+
+int32_t entry_point(void) {
+
+    int32_t * hFile2 = GetStdHandle(-10); // 0x40100b
+    int32_t * hFile = GetStdHandle(-11); // 0x401016
+    int32_t lpNumberOfBytesWritten; // bp-8
+    WriteFile(hFile, (int32_t *)"Let's start out easy\r\nEnter the password>", 42, &lpNumberOfBytesWritten, NULL);
+    ReadFile(hFile2, &g2, 50, &lpNumberOfBytesWritten NULL);
+    int32_t v1 = 0; 0x40105d
+    while (true) {
+        char v2 = *(char *)(v1 + (int32_t)&g1); 0x401055
+        if ((*(char *)(v1 + (int32_t)&g2) ^ 125) != v2) {
+            // break -> 0x40107b
+            break;
+        }
+        int32_t v3 = v1 + 1; // 0x40105d
+        if (v3 >= 24) {
+            // 0x401063
+            return WriteFile(hFile, (int32_t *)"You are success\r\n", 18, &lpNumberOfBytesWritten, NULL);
+        }
+        v1 = v3;
+    }
+    // 0x401091
+    return WriteFile(hFile, (int32_t *)"You are failure\r\n", 18, &lpNumberOfBytesWritten, NULL);
+}
+```
 
 Ahora que hemos analizado correctamente las instrucciones, radare2 nos permite aplicar operaciones sin realmente modificar el binario, por lo que veamos primero que hay en `0x402140`, después habilitemos el modo de cache y finalmente modifiquemos esta área del buffer con un `XOR 0x7d` para 24 caracteres:
 
