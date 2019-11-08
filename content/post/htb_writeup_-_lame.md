@@ -2,7 +2,7 @@
 title: "HTB writeup: Lame"
 date: 2019-11-05T07:53:51-06:00
 description: "Lame, una de las primeras maquinas creadas en HTB y retirada hace bastante tiempo."
-tags: ["hackthebox", "htb", "legacy", "pentesting"]
+tags: ["hackthebox", "htb", "retired", "pentesting"]
 categories: ["htb", "pentesting"]
 ---
 
