@@ -10,6 +10,10 @@ googleAnalytics = ""
 paginate = 10
 preserveTaxonomyNames = true
 
+pygmentsstyle = "solarized-dark"
+pygmentscodefences = true
+pygmentscodefencesguesssyntax = true
+
 [author]
   name = "Tony Palma"
 
@@ -40,21 +44,24 @@ preserveTaxonomyNames = true
   url = "/categories/"
 
 [params]
-	title = "xbytemx"
-	version = "4.x"
-	subtitle = "Un lugar más donde dejar anecdotas"
-	copyright = "Released under the MIT license."
-	since = "2018"
+  title = "xbytemx"
+  version = "4.x"
+  subtitle = "Un lugar más donde dejar anecdotas"
+  copyright = "Released under the MIT license."
+  since = "2018"
 
-	themecolor = "blue"
+  themecolor = "blue"
 
-	favicon   = "favicon.ico"
-	customCSS = []
-	customJS  = []
+  favicon   = "favicon.ico"
+  mainSections = ["posts"]
 
-	name = "Tony Palma"
-	bio = "Yo solo toque la computadora y solita se apago"
-	description = "Un blog donde escribo sobre pentesting, reversing, networking y CTFs"
+  featherIconsCDN = true
+  customCSS = "css/custom.css"
+  customJS = ["js/abc.js", "js/xyz.js", "https://code.jquery.com/jquery-3.4.1.js"]  
+
+  name = "Tony Palma"
+  bio = "Yo solo toque la computadora y solita se apago"
+  description = "Un blog donde escribo sobre pentesting, reversing, networking y CTFs"
 
   # paginate of archives, tags and categories             # 归档、标签、分类每页显示的文章数目，建议修改为一个较大的值
   archivePaginate = 5
