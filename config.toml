@@ -26,6 +26,10 @@ disqusShortname = "xbytemx"
   # Categories are disabled by default.
 
 [params]
+  name = "Tony Palma"
+  bio = "Yo solo toque la computadora y solita se apago"
+  description = "Un blog donde escribo sobre pentesting, reversing, networking y CTFs"
+
   dateform        = "Jan 2, 2006"
   dateformShort   = "Jan 2"
   dateformNum     = "2006-01-02"
