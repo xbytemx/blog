@@ -1,6 +1,7 @@
 ---
-title: "HTB Writeup: Traverxec"
+title: "HTB write-up: Traverxec"
 date: 2020-04-12T14:41:19-05:00
+description: "Traverxec, escape the pager and crack the hashes"
 draft: false
 toc: false
 images:
