@@ -51,13 +51,9 @@ Continuamos con las etiquetas, que de momento podemos ignorar. Después sigue la
 
 Finalmente la ultima nota respecto a AWS y terraform es sobre usar una bóveda de credenciales. Almacenar credenciales en texto plano es una horrible practica que seguimos por comodidad o por alguna otra razón. No solo es almacenar la información de manera segura, sino acceder a estas credenciales cuando estamos trabajando.
 
-<<<<<<< HEAD
-`aws-vault` es una herramienta que nos permite gestionar pares de credenciales de "programación" dentro de AWS. Tiene la ventaja interesante de usar un keyring para almacenar nuestras credenciales y de esa manera acceder con la identidad respectiva en el entorno necesario. Para comenzar con `aws-vault`, descargamos el binario precompilado, lo guardamos en algún directorio que este en nuestro `$PATH` y inicializamos la bóveda agregando un par de credenciales. En mi caso use `~/.local/bin` para almacenar el binario, estas credenciales me permitieron crear el keyring, y utilizando `aws-vault exec` pude cargar las variables de entorno que están guardadas de manera segura.
-=======
 `aws-vault` es una herramienta que nos permite gestionar pares de credenciales de "programación" dentro de AWS. Tiene la ventaja interesante de usar un keyring para almacenar nuestras credenciales y de esa manera acceder con la identidad respectiva en el entorno necesario. Para comenzar con `aws-vault`, descargamos el binario precompilado, lo guardamos en algún directorio que este en nuestro `$PATH` y inicializamos la bóveda agregando un par de credenciales. En mi caso use `~/.local/bin` para almacenar el binario, estas credenciales me permitieron crear el keyring, y utilizando `aws-vault exec` pude cargar las variables de entorno que están guardadas de manera segura. 
 
 Nota, si escribir cada vez `aws-vault exec <perfil> terraform` resulta muy largo, tambien podemos simplemente cargar las variables abriendo una shell con `bash`.
->>>>>>> 43fe626 (post/iac-terraform-nvim)
 
 ![aws-vault](/img/terraform1/aws5_awsvault.png)
 
@@ -149,18 +145,12 @@ El ultimo paso seria configurar `CoC` con `terraform-ls`, para ello creamos (o e
 
 Esta configuración llamara a `terraform-ls serve` cada que necesitemos autocompletar providers, resources, output y demas elementos de terraform, permitiéndonos escribir de manera mas eficiente nuestro código.
 
-<<<<<<< HEAD
-Podemos ver un ejemplo de esta integración completa en el siguiente GIF:
-=======
 Podemos ver un ejemplo de esta integración completa en los siguientes GIF:
->>>>>>> 43fe626 (post/iac-terraform-nvim)
 
 ![final autocomplete](/img/terraform1/final1.gif)
 
 ![final vault](/img/terraform1/final2.gif)
 
-<<<<<<< HEAD
-=======
 > Recuerden destruir despues!
 
 Mi `init.vim` completo es el siguiente:
@@ -222,7 +212,6 @@ autocmd BufReadPost * if @% !~# '\.git[\/\\]COMMIT_EDITMSG$' && line("'\"") > 1 
 map <F6> :setlocal spell! spelllang=es_mx<CR>
 ```
 
->>>>>>> 43fe626 (post/iac-terraform-nvim)
 ---
 
 Muchas gracias por llegar hasta aquí, espero que hayas disfrutado de esta lectura. Hasta la próxima!
