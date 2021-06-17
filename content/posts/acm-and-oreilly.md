@@ -1,7 +1,7 @@
 ---
-title: "SBO: ACM and O'Reilly"
+title: "ACM y O'Reilly Learning"
 date: 2021-02-13T08:57:02-06:00
-description: ""
+description: "Recursos para autodidactas"
 tags: []
 categories: []
 
@@ -9,7 +9,7 @@ categories: []
 
 Sin duda, uno de los mejores recursos que he encontrado para aprender por mi cuenta es O'Reilly Learning, antes conocido como Safari Books Online (SBO). En su catalogo encontramos cursos, libros y entrevistas a expertos en una basta biblioteca de diferentes tópicos de tecnología. Mi acceso a SBO lo obtuve como parte de un convenio con la Association for Computing Machinery (ACM) que mantiene un modelo de suscripción anual para profesionales y estudiantes en países 'en vías de desarrollo' como el mío, donde únicamente pago una suscripción anual de $40 USD.
 
-<!--more--!>
+<!--more-->
 
 He de comenzar diciendo que este post no es patrocinado ni tiene un sponsor (ni ACM ni O'Reilly). Simplemente así como en una ocasión una persona me compartió esta información, yo la comparto para que otras personas puedan aprovecharlo.
 
