@@ -17,7 +17,7 @@ He de comenzar diciendo que este post no es patrocinado ni tiene un sponsor (ni 
 
 Como escribí antes, el proceso inicia en ACM. Visitamos la siguiente liga y llenamos nuestros datos:
 
-![ACM Professional for Mexico](https://services.acm.org/public/qj/proflevel/proflevel_control.cfm?level=2&country=Mexico&form_type=Professional&promo=LEVEL)
+[ACM Professional for Mexico](https://services.acm.org/public/qj/proflevel/proflevel_control.cfm?level=2&country=Mexico&form_type=Professional&promo=LEVEL)
 
 Se puede pagar por PayPal.
 
@@ -25,11 +25,11 @@ Se puede pagar por PayPal.
 
 Nos llegara un correo de confirmación del pago, a la dirección que dejamos configurada.
 
-Posteriormente accederemos a ![https://accounts.acm.org/](https://accounts.acm.org/) y usaremos la misma dirección de correo que usamos para adquirir la membresía. Esto activara nuestra cuenta y nos pedirá crear un username y password. Es importante activar el username  y password, ya que usaremos estas credenciales para ingresar en SBO.
+Posteriormente accederemos a [accounts.acm.org](https://accounts.acm.org/) y usaremos la misma dirección de correo que usamos para adquirir la membresía. Esto activara nuestra cuenta y nos pedirá crear un username y password. Es importante activar el username  y password, ya que usaremos estas credenciales para ingresar en SBO.
 
 ## SBO
 
-Ya con nuestra membresía asociada a un username y password, visitaremos ![learning.oreilly.com](https://learning.oreilly.com). Aquí se nos pedirá un email y password. Colocaremos nuestro username + `@acm.org` y esto automáticamente activara un Single Sign-On que nos redirigirá a ACM. 
+Ya con nuestra membresía asociada a un username y password, visitaremos [learning.oreilly.com](https://learning.oreilly.com). Aquí se nos pedirá un email y password. Colocaremos nuestro username + `@acm.org` y esto automáticamente activara un Single Sign-On que nos redirigirá a ACM. 
 
 Ya en la pagina de ACM, utilizaremos nuestro username y password para ingresar en ACM, y regresar automáticamente a SBO. Bingo. Tenemos ahora acceso completo a SBO vía ACM.
 
