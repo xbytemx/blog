@@ -2,7 +2,7 @@ baseURL = "https://www.xbyte.mx"
 languageCode = "en-us"
 defaultContentLanguage = "en"
 title = "xbytemx"
-theme = "hermit"
+theme = "hello-friend-ng"
 # enableGitInfo = true
 pygmentsCodefences  = true
 pygmentsUseClasses  = true
@@ -65,7 +65,7 @@ disqusShortname = "xbytemx"
 
   [[params.social]]
     name = "instagram"
-    url = "https://instagram.com/xbytemx"
+    url = "https://instagram.com/xbyte.mx"
 
   [[params.social]]
     name = "github"
