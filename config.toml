@@ -3,16 +3,14 @@ languageCode = "en-us"
 defaultContentLanguage = "en"
 title = "xbytemx"
 theme = "hello-friend-ng"
-
-rssLimit = 10
-enableEmoji = true
 disqusShortname = "xbytemx"
+copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
 
 [author]
   name = "Tony Palma"
 
 [taxonomies]
-  category = "blog"
+  category = "categories"
   tag = "tags"
   series = "series"
 
@@ -29,7 +27,16 @@ disqusShortname = "xbytemx"
   dateformNumTime = "2006-01-02 15:04 -0700"
 
   homeSubtitle = "Un lugar más donde dejar anecdotas"
-  copyright = ' &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
+
+  [params.footer]
+    trademark = 2023
+    rss = true
+    copyright = true
+    author = true
+
+  [params.logo]
+    logoText = "xbytemx"
+    logoHomeLink = "/"
   
   [[params.social]]
     name = "twitter"
@@ -45,12 +52,13 @@ disqusShortname = "xbytemx"
 
 [menu]
   [[menu.main]]
-    identifier = "blog"
+    identifier = "posts"
     name = "Posts"
     url = "posts/"
     weight = 10
 
   [[menu.main]]
+    identifier = "about"
     name = "About"
     url = "about/"
     weight = 20
