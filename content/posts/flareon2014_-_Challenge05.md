@@ -559,7 +559,7 @@ Esto implica que nosotros controlamos el valor de las flags, presionándolas en 
 
 Entonces ya que hemos entendido hagamos el reverso de cada letra presionada mediante el siguiente burdo script en python:
 
-```python
+``` python
 #!/usr/bin/env python
   
 import r2pipe, os
@@ -594,7 +594,7 @@ La letra faltante, "m", se devuelve a la salida del la función de reseteo.
 
 Validemos el DLL contra yara rules:
 
-```
+``` text
 xbytemx@laptop:~/flare-on2014/challenge05$ yara ~/git/rules/Antidebug_AntiVM_index.yar 5get_it
 anti_dbg 5get_it
 keylogger 5get_it

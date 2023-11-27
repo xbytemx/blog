@@ -13,7 +13,7 @@ Comenzamos por descargar el [zip](http://www.flare-on.com/files/2014_FLAREOn_Cha
 
 Bien, después de descargar el archivo general y descomprimirlo, debemos tener en nuestra carpeta un archivo llamando C1.exe, el cual posteriormente lo pasamos por file y nos indica vía headers que se trata de un 'PE32+ ejecutable con GUI x86_64', por lo que probamos a ejecutarlo en un sandbox, ahí veremos que se trata de Microsoft Cabinet, que nos hace aceptar un EULA de Fireeye, por lo que extraemos su contenido usando cabextract:
 
-```bash
+``` text
 xbytemx@laptop:~/flare-on2014$ cabextract C1.exe
 Extracting cabinet: C1.exe
   extracting Challenge1.exe
@@ -23,21 +23,21 @@ All done, no errors.
 
 Nos despliega en pantalla que ha extraído correctamente "Challenge1.exe", el cual nuevamente lo pasamos por file:
 
-```
+``` text
 xbytemx@laptop:~/flare-on2014$ file Challenge1.exe
 Challenge1.exe: PE32 executable (GUI) Intel 80386 Mono/.Net assembly, for MS Windows
 ```
 
 El comando file nos indica que se trata de un PE32 escrito en Mono/.Net, lo cual nos hace un guiño a que podemos decompilarlo usando alguna herramienta que entienda .Net, en mi caso use dnSpy:
 
-```
+``` text
 xbytemx@laptop:~/flare-on2014$ mono ~/tools/dnSpy/dnSpy.Console.exe -o challenge01 Challenge1.exe
 ERROR: File creation failed (/home/xbytemx/flare-on2014/challenge01/XXXXXXXXXXXXXXX/rev_challenge_1/Form1.resx), description = Create ResX file, Exception message: Object reference not set to an instance of an object
 ```
 
 Tras descompilar el binario, depositamos su contenido en la carpeta challenge01, la cual tiene la siguiente estructura:
 
-```
+``` text
 xbytemx@laptop:~/flare-on2014/challenge01$ ls -lahR
 .:
 total 16K
@@ -90,7 +90,7 @@ En la carpeta raíz, encontraremos el archivo _solution_ del proyecto "XXXXXXXXX
 
 Comenzamos por revisar el archivo Program.cs, el cual tiene el siguiente contenido:
 
-```
+``` cs
 using System;
 using System.Windows.Forms;
 
@@ -113,7 +113,7 @@ namespace XXXXXXXXXXXXXXX
 
 En el código vemos que se crea una nueva aplicación, una con Form1. Veamos que tenemos en Form1.Designer:
 
-```
+``` cs
 namespace XXXXXXXXXXXXXXX
 {
 	// Token: 0x02000002 RID: 2
@@ -190,7 +190,7 @@ El titulo tiene el mensaje "Let's start with something easy!" y en el contenido 
 
 Finalmente, revisamos el contenido del ultimo archivo de código fuente, Form1:
 
-```
+``` cs
 using System;
 using System.ComponentModel;
 using System.Drawing;
@@ -249,7 +249,7 @@ Hagamos click sobre el botón de "DECODE!", vemos que tanto el texto como la ima
 
 El texto se ve ilegible, recordando que es el resultado del 3er decoding "text3", hagamos el mismo proceso tomando la información del archivo "rev_challenge_1.dat_secret.encode" con el siguiente programa:
 
-```
+``` python
 #!/usr/bin/env python3
 
 # En bash use: hexdump -e '"\\\x" /1 "%02x"' rev_challenge_1.dat_secret.encode
@@ -275,7 +275,7 @@ print(t3)
 
 Este pequeño código lo que realiza es tomar procesar el binario encodeado y devolvernos las mismas operaciones de encoding. Tras ejecutarlo tenemos lo siguiente:
 
-```
+``` text
 xbytemx@laptop:~/flare-on2014/challenge01$ python3 decode.py
 3rmahg3rd.b0b.d0ge@flare-on.com
 r3amghr3.d0b.b0degf@alero-.noc

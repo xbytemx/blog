@@ -58,7 +58,7 @@ Se define el stack frame con 0x2c y posteriormente se carga la variable local_18
 
 Veamos que hace esta función:
 
-```
+``` text
 0x004025d1      55             push ebp
 0x004025d2      8b6c2408       mov ebp, dword [arg_8h]     ; Subimos el balor de arg_8h en ebp
 0x004025d6      8d44240c       lea eax, dword [arg_ch]     ; Cargamos la direccion de arg_ch en EAX
@@ -182,7 +182,7 @@ Veamos como se ve en el modo por grafo:
 
 Ok, parece que todas las instrucciones siguen a un loop en donde se realizar un XOR del byte correspondiente con 0x66 de los 479 bytes siguientes, algo en pseudocodigo como lo siguiente:
 
-```
+``` text
 index = 28;
 newcode = stack;
 for (Contador =  479; Contardor != 0; Contador--){
@@ -197,7 +197,7 @@ Eso quiere decir que el jmp 0x31 (marcado en verde), no era un jmp...
 
 Ok, entonces modificamos el código que usamos hace un momento para hacer el xor, descargar el payload nuevamente y analizarlo:
 
-```python
+``` python
 #!/usr/bin/env python
 # -*- encode: utf-8 -*-
 
@@ -248,7 +248,7 @@ Ok, este código se parece un poco al anterior, vemos que ahora en lugar de ser 
 
 Analicemos el código:
 
-```
+``` text
 0x00000010      6875730000     push 0x7375                 ; 'us'
 0x00000015      6873617572     push 0x72756173             ; 'saur'
 0x0000001a      686e6f7061     push 0x61706f6e             ; 'nopa'
@@ -276,7 +276,7 @@ Analicemos el código:
 
 Nuevamente, modificamos el script que teníamos anterior para realizar el loop de xor multibyte:
 
-```python
+``` python
 #!/usr/bin/env python
 # -*- encode: utf-8 -*-
 
@@ -325,7 +325,7 @@ Ajustamos nuevamente el código:
 
 Ooootro loop. Veamos las instrucciones a detalle:
 
-```
+``` text
 0x00000031      e800000000     call 0x36                    ; Brincamos a 0x36
 0x00000036      8b3424         mov esi, dword [esp]         ; ESI = ESP
 0x00000039      83c61e         add esi, 0x1e                ; ESI = ESP + 30
@@ -340,7 +340,7 @@ Ooootro loop. Veamos las instrucciones a detalle:
 
 Aplicamos el mismo caso del ejemplo anterior en el código:
 
-```python
+``` python
 #!/usr/bin/env python
 # -*- encode: utf-8 -*-
 
@@ -392,7 +392,7 @@ Veamos mejor las instrucciones:
 
 Nuevamente otro loop, solo que esta vez la llave es mas grande. Apliquemos una adecuación al código que ya tenemos:
 
-```python
+``` python
 #!/usr/bin/env python
 # -*- encode: utf-8 -*-
 
