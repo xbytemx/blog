@@ -463,7 +463,7 @@ El valor de AH entonces, puede ser de 1,2,4,8. Dicho de otra manera: 0x0001, 0x0
 
 Una representación de lo anterior en python3 seria lo siguiente:
 
-```python
+``` python
 import struct
 buf = struct.pack ("37B", *[
 0xaf,0xaa,0xad,0xeb,0xae,0xaa,0xec,0xa4,0xba,0xaf,0xae,

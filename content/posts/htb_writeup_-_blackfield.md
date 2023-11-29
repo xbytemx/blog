@@ -31,7 +31,7 @@ Iniciamos por ejecutar un `masscan` para descubrir puertos udp y tcp abiertos, y
 
 ## masscan
 
-```
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.192 | tee /home/tony/htb/blackfield/masscan.log
 Discovered open port 389/tcp on 10.10.10.192
 Discovered open port 3268/tcp on 10.10.10.192
@@ -52,7 +52,7 @@ Descubrimos 9 puertos abiertos; 53(DNS UDP y TCP), 88(Kerberos), 135(RPC), 445(S
 
 ## nmap services
 
-```
+``` text
 # Nmap 7.80 scan initiated Thu Jun 11 01:10:41 2020 as: nmap -sS -sV -sC -n -v -p 389,3268,445,5985,135,593,88,53 -oA /home/tony/htb/blackfield/normal 10.10.10.192
 Nmap scan report for 10.10.10.192
 Host is up (0.10s latency).
@@ -108,7 +108,7 @@ Como podemos ver por la salida de nmap, tenemos el dominio de la maquina `blackf
 
 Ejecutamos una conexión anonima sobre el protocolo SMB, esto con la intencion de desplegar todo el contenido que podamos del servidor, en mi caso usare `smbclient.py` de impacket, pero podemos usar `smbclient` nativo o `smbmap`. Una vez conectado sacamos informacion sobre los recursos compartidos con el comando shares.
 
-```cmd
+``` cmd
 xbytemx@laptop:~/htb/blackfield$ smbclient.py anonymous:@10.10.10.192
 Impacket v0.9.22-dev - Copyright 2019 SecureAuth Corporation
 
@@ -126,7 +126,7 @@ SYSVOL
 
 Como podemos ver este servidor comparte algunos recursos de manera anonima, tanto algunos que son por defecto tales como `SYSVOL` y `NETLOGON`, como otros que son de mayor interes como `forensic` y `profiles$`. Veamos el contenido de `profiles$` accediendo al recurso y listando su contenido:
 
-```cmd
+``` cmd
 # use profiles$
 # ls
 drw-rw-rw-          0  Wed Jun  3 11:47:12 2020 .
@@ -142,7 +142,7 @@ drw-rw-rw-          0  Wed Jun  3 11:47:11 2020 AChampken
 
 
 
-```cmd
+``` text
 xbytemx@laptop:~/htb/blackfield$ smbclient -c 'ls' -N '//10.10.10.192/profiles$' | awk '{print $1}' | grep -vE '^$|[0-9]|\.' | tee list1.txt
 AAlleni
 ABarteski
@@ -156,7 +156,7 @@ ACsonaki
 
 Despues de intentar con crackmapexec la lista de nombres como usuario y contraseña, 
 
-```
+``` text
 ```
 
 # user.txt

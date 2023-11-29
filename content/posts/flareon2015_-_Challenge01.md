@@ -12,7 +12,7 @@ Comenzamos por descargar el [zip](http://www.flare-on.com/files/2015_FLAREOn_Cha
 
 Bien, después de descargar el archivo general y descomprimirlo, debemos tener en nuestra carpeta un archivo llamando `Flare-On_start_2015.exe`, en la carpeta `1`, el cual posteriormente lo pasamos por file y nos indica vía headers que se trata de un 'PE32+ ejecutable con GUI x86_64', por lo que probamos a ejecutarlo en un sandbox, ahí veremos que se trata de Microsoft Cabinet, que nos hace aceptar un EULA de Fireeye, por lo que extraemos su contenido usando `cabextract`:
 
-```bash
+``` bash
 xbytemx@laptop:~/flare-on2015/1/$ cabextract Flare-On_start_2015.exe
 Extracting cabinet: Flare-On_start_2015.exe
   extracting i_am_happy_you_are_to_playing_the_flareon_challenge.exe

