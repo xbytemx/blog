@@ -27,25 +27,31 @@ Pensemos por un momento en la segregacion de responsabilidades respecto a quien 
 
 Nuestros usuarios que crean el codigo (HCL) dentro de esta segregacion deben tener permisos de read/write y acceso al repositorio via organizaciones, grupos o otra estructura que permita agregarlos segun su nivel de responsabilidad o participacion (RBAC). Esta primera diferenciacion sobre el rol del usuario y su temporalidad es la primera barrera para nuestros repositorios. La autenticacion por SAML nos permite que una vez que un usuario es revocado de la fuente de autenticacion, este no pueda volver a acceder a los recursos a los que tuvo acceso, pero esto significa que hasta que los usuarios son eliminados debemos hacer una revision de quienes tienen acceso a nuestro repositorio? Por supuesto que no. Como una medida de higiene, debemos verificar y darle mantenimiento tanto a repositorios como accesos a estos. Los permisos no son estaticos ni para siempre. 
 
-Un patron comun para establecer los permisos es: Ningun usuario debe tener acceso al repositorio, despues solo las personas que pertenecen aun grupo o org, que puedan ver el codigo, logs de ci/cd e informacion del pipeline. Finalmente solo los developers de IaC que crean cambios, deberian tener acceso de escritura en el repositorio. Esto puede sonar muy simple, pero una buena estructura y mantener el principio del menor privilegio (PoLP) nos ayuda a evitar indexaciones inecesarias, una arquitectura expuesa o riesgo si hacemos un push de informacion sensible accidentalmente.
+Un patron comun para establecer permisos es: Ningun usuario por defecto debe tener acceso al repositorio, despues solo las personas que pertenecen aun grupo o org, que puedan ver el codigo, logs de ci/cd e informacion del pipeline. Finalmente solo los developers de IaC que crean cambios, deberian tener acceso de escritura en el repositorio. Esto puede sonar muy simple, pero una buena estructura y mantener el principio del menor privilegio (PoLP) nos ayuda a evitar indexaciones inecesarias, una arquitectura expuesa o riesgo si hacemos un push de informacion sensible accidentalmente.
 
 Ya hablamos de los permisos, pero a que deberian tener acceso los usuarios que crean o modifican el codigo? Unicamente al repositorio que mantienen. No deberian tener acceso al almacenamiento que contiene el tfstate file o a deployear ellos la infraestructura. Historicamente, la persona que mantiene el codigo, tiene acceso a realizar los cambios en los ambientes desplegados, pero es esto un must? La realidad es que no. No necesariamente el usuario que hace cambios debe tener acceso a modificar la infraestructura donde se realizan los cambios, es solo una comodidad que los desarrolladores de IaC ha heredado de roles operativos.
 
 ## Provedores, modulos y versiones
 
-Si vienes del "mundo" dev, definir las versiones de las bibliotecas y el lenguaje, analizar las ventajas y desventajas entre las versiones y su soporte/desarrollo a largo plazo es una de las primeras definiciones que se hacen en los proyectos. En terraform no es diferente.
+Si vienes del "mundo" dev, definir las versiones de las bibliotecas y el lenguaje, analizar las ventajas y desventajas entre las versiones y su soporte/desarrollo a largo plazo es una de las primeras definiciones que se hacen en los proyectos. En terraform no es diferente, pero si tenemos una limitacion y es que actualmente el control de versiones se hace por tags y no por hashes, lo cual no nos garantiza integridad. Si una version es sobreescrita, no nos daremos cuenta de ello.
 
-Aqui tengo una mala noticia. Al momento de escribir esto, no existe una manera de tener alertas si estamos usando una version vulnerable de terraform o si algun proveedor fue marcado como infectado/comprometido
+Aqui tengo otra mala noticia. Al momento de escribir esto, no existe una manera de tener alertas si estamos usando una version vulnerable de terraform o si algun proveedor fue marcado como infectado/comprometido, que no sea usando un analizador estatico, es decir, si yo ejecuto `terraform init`, terraform no me alertara sobre esto como lo hace NPM.
+
+Porque es importante el control de las versiones? Por los ataques de cadena de suministro (supply chain). La version de requerida de terraform, la version de los proveedores y de los modulos puede ser fija o dinamica. Dinamica cuando cualquier version superior a x.y.z (`>= x.y.z`) es aceptada o cuando buscamos que la version x.y tenga el ultimo parche de z (`~> x.y.z`).
+
+Si usamos provedores no oficiales y/o modulos de la comunidad, nos exponemos aun mas a este tipo de ataques. Bueno, pero cual seria el impacto aqui con un modulo que sea comprometido? Owning total de la infraestructura donde desplegamos terraform. Como limitamos este impacto? Con los permisos limitados a la identidad que despliega terraform.
+
+Finalmente, que es lo mejor que podemos hacer para prevenir lo mas posible con el menor esfuerzo? Dejar fijas las versiones (`version = "x.y.z"`). Ventajas adicionales: inmutabilidad.  
 
 ## tfstate file
 
 En este punto ya tenemos un repositorio con los permisos correctos, nuestros usuarios con unicamente acceso al repositorio y a las herramientas del pipeline de CI/CD para validar y debuggear el codigo. El siguiente elemento a proteger y uno de los mas criticos, es el archivo de estado de terraform o tfstate file. Este archivo contiene la informacion de como se encuentra nuestra infraestructura actualmente, por ello resulta igual de sensible que exponer nuestro codigo, pero con un mayor impacto, porque si alguien altera este archivo, puede modificar nuestra infraestructura. Hablare mas a detalle sobre el contenido este archivo en otro post, pero por ahora centremonos en protegerlo.
 
 Para proteger el tfstate file, se suele usar backends que ofrezcan lo siguiente:
-- Cifrado at-rest y on-transit.
-- Candado.
-- Unico. 
-- Acceso restringido.
+- Cifrado at-rest y on-transit. Si alguien intercepta o logra descargar el archivo, este debe estar protegido.
+- Bloqueo. Solo un usuario a la vez puede acceder al archivo para evitar corrupcion o tampering.
+- Unico. Centralizar el archivo de estado en un solo lugar.
+- Acceso restringido. Limitar por politicas el acceso a los archivos dentro del backend.
 
 ## Shift Left
 
