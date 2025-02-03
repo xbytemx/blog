@@ -55,7 +55,7 @@ copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_
 
   [[params.social]]
     name = "hackthebox"
-    url = "xbytemx"
+    url = "https://app.hackthebox.com/profile/15987"
 
 [[params.social]]
     name = "mastodon"
