@@ -1,9 +1,8 @@
 baseURL = "https://www.xbyte.mx"
 languageCode = "en-us"
-defaultContentLanguage = "en"
+defaultContentLanguage = "es"
 title = "xbytemx"
 theme = "hello-friend-ng"
-disqusShortname = "xbytemx"
 copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
 
 [taxonomies]
@@ -14,7 +13,7 @@ copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_
 [params]
   name = "Tony Palma"
   bio = "Yo solo toque la computadora y solita se apago"
-  description = "Un blog donde escribo sobre pentesting, reversing, networking y CTFs"
+  description = "Un blog donde escribo sobre seguridad informatica desde mi propia voz"
   images = [""]
   keywords = "security, reversing, cloudsec, ctf, hackthebox, htb"
 
@@ -40,14 +39,6 @@ copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_
   [[params.social]]
     name = "twitter"
     url = "https://twitter.com/xbytemx"
-
-  [[params.social]]
-    name = "instagram"
-    url = "https://instagram.com/xbyte.mx"
-
-  [[params.social]]
-    name = "github"
-    url = "https://github.com/xbytemx"
 
   [[params.social]]
     name = "gitlab"
